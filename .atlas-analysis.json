@@ -1,0 +1,106 @@
+{
+  "projectType": "saas",
+  "projectName": "OptionStrat AI",
+  "projectDescription": "AI-powered American options simulator with Black-Scholes-Merton pricing, market sentiment analysis, and intelligent strategy recommendations.",
+  "theme": "sequoia",
+  "primaryColor": "#00C853",
+  "lightColor": "#00E676",
+  "darkColor": "#00A344",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Features",
+            "pages": [
+              "features/option-builder",
+              "features/heatmap-simulator",
+              "features/ai-insights",
+              "features/strategy-recommender",
+              "features/market-sentiment"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/building-strategies",
+              "guides/understanding-greeks",
+              "guides/interpreting-heatmaps",
+              "guides/using-ai-analyst",
+              "guides/risk-management"
+            ]
+          },
+          {
+            "group": "Technical Reference",
+            "pages": [
+              "technical/architecture",
+              "technical/black-scholes",
+              "technical/pricing-models",
+              "technical/data-sources"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Endpoints",
+            "pages": [
+              "api/overview",
+              "api/option-chains",
+              "api/calculations",
+              "api/ai-insights",
+              "api/recommender",
+              "api/market-data"
+            ]
+          },
+          {
+            "group": "Models",
+            "pages": [
+              "api/models/strategy-state",
+              "api/models/option-leg",
+              "api/models/greeks"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Real-time options chain data from Yahoo Finance with bid/ask/volume/open interest",
+    "Interactive strategy builder supporting multi-leg positions and stock hedging",
+    "Dynamic P&L heatmap using Black-Scholes-Merton for risk visualization",
+    "AI-powered portfolio analysis with LLM contextual insights",
+    "Market sentiment analysis combining news (FinViz + VaderSentiment) and insider trading data",
+    "Intelligent strategy recommender with probability-based filtering",
+    "Greeks calculation (Delta, Gamma, Theta, Vega, Rho) for portfolio risk assessment",
+    "Support for American-style options with binomial and trinomial tree pricing",
+    "React frontend with Zustand state management and real-time updates"
+  ],
+  "publicApiSurface": [
+    "POST /api/options/chains/{ticker}",
+    "POST /api/calculations/heatmap",
+    "POST /api/ai/greeks",
+    "POST /api/ai/insights",
+    "GET /api/options/recommend/{ticker}",
+    "GET /api/market/sentiment/{ticker}",
+    "GET /api/market/insiders/{ticker}",
+    "bsm_price(S, K, T, r, sigma, q, kind)",
+    "bsm_greeks(S, K, T, r, sigma, q, kind)",
+    "binomial_tree_price(S, K, T, r, sigma, N, q, kind, style)",
+    "trinomial_tree_price(S, K, T, r, sigma, N, q, kind, style)",
+    "StrategyBuilder.generate_heatmap_grid(state)",
+    "AIAnalyzerService.analyze_strategy(state)",
+    "StrategyRecommender.recommend(chain, spot, bias, risk_profile)"
+  ]
+}
