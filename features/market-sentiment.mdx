@@ -1,0 +1,503 @@
+---
+title: "Market Sentiment Analyzer"
+description: "Track news sentiment, insider trading, and fundamental metrics to inform your option strategies"
+---
+
+## Overview
+
+The Market Sentiment Analyzer combines real-time news sentiment analysis, insider trading activity, and fundamental metrics to give you a complete picture of market psychology around any ticker. This intelligence layer helps you make better decisions about directional bias and timing.
+
+<CardGroup cols={3}>
+  <Card title="VADER Sentiment" icon="chart-mixed">
+    NLP-powered analysis of recent news headlines with compound scoring
+  </Card>
+  <Card title="Insider Activity" icon="user-tie">
+    Track purchases and sales by executives and major stakeholders
+  </Card>
+  <Card title="Fundamental Context" icon="building-columns">
+    Analyst targets, P/E ratios, and business metrics
+  </Card>
+</CardGroup>
+
+## How Sentiment Analysis Works
+
+### Data Collection Pipeline
+
+The sentiment engine follows this workflow:
+
+<Steps>
+  <Step title="Headline Scraping">
+    Scrapes Finviz for the most recent news headlines about the ticker
+  </Step>
+  
+  <Step title="VADER Analysis">
+    Applies VADER (Valence Aware Dictionary and sEntiment Reasoner) to each headline
+  </Step>
+  
+  <Step title="Temporal Grouping">
+    Groups headlines by date and calculates daily average sentiment
+  </Step>
+  
+  <Step title="Composite Score">
+    Computes a final composite score from the last 5 days of news
+  </Step>
+</Steps>
+
+<Note>
+VADER is specifically tuned for social media and news text, making it highly effective for financial sentiment analysis.
+</Note>
+
+### Interpreting the Sentiment Score
+
+The score is displayed as a **compound sentiment value** from -1.0 to +1.0:
+
+| Score Range | Interpretation | Visual Indicator |
+|-------------|----------------|------------------|
+| **+0.05 to +1.0** | Bullish sentiment | Green circle, positive percentage |
+| **-0.05 to +0.05** | Neutral sentiment | Orange circle, near-zero percentage |
+| **-1.0 to -0.05** | Bearish sentiment | Red circle, negative percentage |
+
+**Example Scores**:
+```
++0.45 (45%) = Very bullish news cycle
++0.12 (12%) = Mildly bullish
+ 0.02 (2%)  = Neutral
+-0.18 (-18%) = Mildly bearish
+-0.52 (-52%) = Very bearish news cycle
+```
+
+<Tip>
+A score above +0.20 or below -0.20 indicates strong directional sentiment. Use this to validate or question your trading thesis.
+</Tip>
+
+### Sentiment Score Calculation
+
+VADER analyzes each headline and returns four scores:
+- **Positive**: Proportion of positive words
+- **Negative**: Proportion of negative words
+- **Neutral**: Proportion of neutral words
+- **Compound**: Overall sentiment (-1 to +1)
+
+The system uses the **compound score** for each headline, then:
+
+1. Groups headlines by date
+2. Calculates mean sentiment per day
+3. Filters to last 5 days
+4. Computes final average
+
+```python
+Example:
+Day 1: +0.30 (3 bullish headlines)
+Day 2: +0.15 (mixed headlines)
+Day 3: +0.25 (2 bullish headlines)
+Day 4: -0.10 (1 bearish headline)
+Day 5: +0.20 (bullish headline)
+
+Final Score: (+0.30 + 0.15 + 0.25 - 0.10 + 0.20) / 5 = +0.16
+```
+
+## Recent News Headlines
+
+The panel displays the **4 most recent headlines** scraped from Finviz:
+
+```
+"Apple announces record quarterly earnings, beats estimates"
+"Concerns over supply chain disruptions impact guidance"
+"Analyst upgrades AAPL to Buy with $200 target"
+"CEO Tim Cook discusses AI integration in products"
+```
+
+### How to Use Headlines
+
+<CardGroup cols={2}>
+  <Card title="Identify Catalysts" icon="rocket">
+    Look for earnings announcements, product launches, or regulatory news
+  </Card>
+  <Card title="Gauge Tone" icon="message">
+    Are headlines using words like "surge", "beat", "upgraded" (bullish) or "miss", "concern", "downgrade" (bearish)?
+  </Card>
+  <Card title="Spot Disagreement" icon="scale-balanced">
+    If headlines are mixed but score is strongly directional, dig deeper
+  </Card>
+  <Card title="Check Recency" icon="clock">
+    Headlines are sorted by recency. Old positive news may not matter if recent news is negative
+  </Card>
+</CardGroup>
+
+<Note>
+The sentiment analyzer typically captures 10-20 headlines from the past 5 days, depending on ticker activity.
+</Note>
+
+## Insider Trading Activity
+
+### Why Insider Activity Matters
+
+Insiders (executives, directors, major shareholders) have privileged information about company health. Their trading patterns can signal:
+
+- **Heavy buying**: Insiders believe the stock is undervalued
+- **Heavy selling**: Potential concerns, or routine portfolio rebalancing
+- **Unusual activity**: Signals before earnings or major announcements
+
+<Warning>
+Insider selling is less meaningful than buying. Executives sell for many reasons (diversification, taxes, personal expenses), but they typically only buy when they're confident.
+</Warning>
+
+### Insider Metrics Panel
+
+Two summary metrics show aggregate activity:
+
+**Insider Purchases** (Green badge)
+```
+Number of purchase transactions in recent period
+Example: 5 purchases
+```
+
+**Insider Sales** (Red badge)
+```
+Number of sale transactions in recent period
+Example: 12 sales
+```
+
+**Interpreting the Ratio**:
+- **More purchases than sales**: Bullish signal
+- **Balanced**: Neutral (routine activity)
+- **Heavy sales**: Potential concern (or routine diversification)
+
+### Top Insider Transactions
+
+Displays the **3 most recent insider trades** with details:
+
+```
+Tim Cook (CEO)
++50,000 acciones
+
+John Smith (CFO)  
+-25,000 acciones
+
+Jane Doe (Director)
++10,000 acciones
+```
+
+**What to Look For**:
+
+✅ **Bullish Signals**:
+- Multiple insiders buying (especially C-suite)
+- Large purchase sizes
+- Purchases near 52-week lows
+
+⚠️ **Neutral Signals**:
+- Routine 10b5-1 plan sales (pre-scheduled)
+- Small quantities
+- Balanced buy/sell activity
+
+🚨 **Bearish Signals**:
+- Multiple insiders selling simultaneously
+- Unusual selling by CEO or CFO
+- Large sale sizes during "quiet periods"
+
+<Tip>
+Cross-reference insider activity with the sentiment score. If insiders are buying heavily while news is bearish, that's a contrarian bullish signal.
+</Tip>
+
+## Fundamental Context Panel
+
+The Contexto tab provides key fundamental metrics:
+
+### Business Summary
+
+**What it is**: First 300 characters of the company's business description
+
+**How to use it**:
+- Understand the company's sector and industry
+- Identify cyclical vs. defensive characteristics
+- Gauge business model complexity
+
+```
+Example:
+"Apple Inc. designs, manufactures, and markets smartphones, 
+personal computers, tablets, wearables, and accessories 
+worldwide. The company offers iPhone, Mac, iPad..."
+```
+
+### Pricing and Analyst Data
+
+| Metric | Description | How to Use |
+|--------|-------------|------------|
+| **Current Price** | Real-time spot price | Starting point for strike selection |
+| **Target Mean** | Average analyst price target | Gauge upside potential |
+| **Target Median** | Median analyst price target | Less influenced by outlier targets |
+| **Recommendation** | Consensus rating | buy, hold, strong_buy, sell, etc. |
+
+**Example Interpretation**:
+```
+Current Price: $180
+Target Mean: $210
+Target Median: $205
+Recommendation: Buy
+
+Analysis: Analysts expect +16% upside. Consider bullish strategies.
+```
+
+<Note>
+If target mean is significantly above current price, that supports bullish strategies like bull put spreads. If target is below, consider bearish strategies.
+</Note>
+
+### Valuation Ratios
+
+**Forward P/E**
+- Price-to-earnings based on next 12 months' expected earnings
+- Lower P/E = more value, Higher P/E = growth premium
+- Compare to sector average
+
+**Trailing P/E**
+- P/E based on last 12 months' actual earnings
+- Historical context for valuation
+
+**Debt to Equity**
+- Financial leverage ratio
+- Higher ratio = more debt risk
+- Important for financial sector analysis
+
+```
+Example:
+Forward P/E: 28.5
+Trailing P/E: 32.1
+Debt/Equity: 1.2
+
+Interpretation: P/E is compressing (forward < trailing), 
+suggesting earnings growth. Moderate leverage.
+```
+
+## Real-World Use Cases
+
+### Case 1: Confirming a Bullish Thesis
+
+**Scenario**: You're considering a bull put spread on AAPL
+
+<Steps>
+  <Step title="Check Sentiment">
+    Sentiment Score: +0.22 (bullish)
+    
+    Recent Headlines: Mostly positive (earnings beat, product launch)
+  </Step>
+  
+  <Step title="Review Insider Activity">
+    Insider Purchases: 4
+    
+    Insider Sales: 2
+    
+    Top Trade: CEO bought 20,000 shares
+  </Step>
+  
+  <Step title="Verify Fundamentals">
+    Target Mean: $210 (current: $180, +16% upside)
+    
+    Recommendation: Buy
+  </Step>
+  
+  <Step title="Conclusion">
+    ✅ All three signals are bullish
+    
+    → High confidence in bull put spread strategy
+  </Step>
+</Steps>
+
+### Case 2: Identifying a Contrarian Opportunity
+
+**Scenario**: News is negative but fundamentals are strong
+
+<Steps>
+  <Step title="Check Sentiment">
+    Sentiment Score: -0.18 (bearish)
+    
+    Recent Headlines: Supply chain concerns, guidance cut
+  </Step>
+  
+  <Step title="Review Insider Activity">
+    Insider Purchases: 7
+    
+    Insider Sales: 1
+    
+    Multiple executives buying heavily
+  </Step>
+  
+  <Step title="Verify Fundamentals">
+    Target Mean: Still $200 (current: $170)
+    
+    Recommendation: Strong Buy
+    
+    Forward P/E: Compressed to attractive level
+  </Step>
+  
+  <Step title="Conclusion">
+    🎯 Contrarian bullish signal
+    
+    → News is bearish but smart money is buying
+    
+    → Consider bullish strategy with longer timeframe
+  </Step>
+</Steps>
+
+### Case 3: Avoiding a Bull Trap
+
+**Scenario**: News is positive but insiders are selling
+
+<Steps>
+  <Step title="Check Sentiment">
+    Sentiment Score: +0.30 (very bullish)
+    
+    Recent Headlines: New product launch hype
+  </Step>
+  
+  <Step title="Review Insider Activity">
+    Insider Purchases: 0
+    
+    Insider Sales: 9
+    
+    CEO, CFO, and multiple directors selling
+  </Step>
+  
+  <Step title="Verify Fundamentals">
+    Target Mean: $150 (current: $155, -3%)
+    
+    Recommendation: Hold
+    
+    Forward P/E: Elevated relative to sector
+  </Step>
+  
+  <Step title="Conclusion">
+    ⚠️ Divergence - news bullish but insiders selling
+    
+    → Avoid bullish strategies
+    
+    → Consider neutral (iron condor) or skip the trade
+  </Step>
+</Steps>
+
+## Advanced Sentiment Strategies
+
+### Pre-Earnings Sentiment Check
+
+**1 Week Before Earnings**:
+- Check sentiment score trend (improving or deteriorating)
+- Look for "earnings preview" headlines
+- Note if analysts are revising estimates up or down
+
+**Strategy Implications**:
+- **Improving sentiment** → Consider long options to capture IV expansion
+- **Deteriorating sentiment** → Avoid or use neutral strategies
+
+### Post-Earnings Sentiment Analysis
+
+**Immediately After Earnings**:
+- Sentiment score spikes (positive or negative)
+- Headlines reflect earnings beat/miss
+- IV typically crashes
+
+**Strategy Implications**:
+- **Positive surprise + bullish sentiment** → Bull put spreads
+- **Negative surprise + bearish sentiment** → Wait for stabilization
+- **Mixed reaction** → Iron condor to capture IV crush
+
+<Tip>
+The most profitable plays are often contrarian: Buy when sentiment is overly bearish (and fundamentals are strong), sell when sentiment is overly bullish (and valuations are stretched).
+</Tip>
+
+### Combining Sentiment with Technicals
+
+**Strong Setup**:
+```
+Bullish Sentiment (+0.25)
++ Stock at support level
++ Insider buying
+= High confidence bull put spread
+```
+
+**Weak Setup**:
+```
+Bullish Sentiment (+0.20)
++ Stock at resistance
++ Insider selling
+= Avoid or wait for breakout confirmation
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Don't Trade on Sentiment Alone" icon="triangle-exclamation">
+    Sentiment is a confirmation tool, not a standalone signal. Always combine with technicals and fundamentals
+  </Card>
+  <Card title="Weight Insider Buying Heavily" icon="scale-balanced">
+    Insider buying is one of the most bullish signals. Insider selling is less meaningful
+  </Card>
+  <Card title="Check Sentiment Daily" icon="calendar-day">
+    Sentiment can shift rapidly. Re-check before entering trades
+  </Card>
+  <Card title="Compare to Historical Levels" icon="clock-rotate-left">
+    A +0.15 score may be neutral for a volatile tech stock but very bullish for a utility
+  </Card>
+</CardGroup>
+
+## Limitations and Warnings
+
+### Sentiment Analysis Limitations
+
+<Warning>
+VADER can misinterpret sarcasm, context, or technical jargon. Always read the actual headlines, don't just rely on the score.
+</Warning>
+
+**Known Issues**:
+- Headlines with mixed sentiment (e.g., "Stock surges despite concerns") may score incorrectly
+- Low-volume tickers may have insufficient headlines for accurate scoring
+- Sentiment lags price action (news reports what already happened)
+
+### Insider Activity Caveats
+
+**Not All Insider Sales Are Bearish**:
+- 10b5-1 plans (pre-scheduled sales)
+- Diversification and tax planning
+- Stock-based compensation vesting
+- Personal financial needs
+
+**Delayed Reporting**:
+- Insiders have up to 2 business days to report trades (Form 4)
+- The data you see may be 1-3 days old
+
+### Fundamental Data Timeliness
+
+- Analyst targets may be stale (updated quarterly or after major news)
+- P/E ratios reflect recent earnings (updated quarterly)
+- Business summaries rarely change
+
+## Troubleshooting
+
+### "No se pudo conectar a los oraculos de sentimiento"
+
+**Cause**: Network error or Finviz temporarily unavailable
+
+**Solution**: Wait 1-2 minutes and reload the ticker. Finviz may rate-limit requests.
+
+### Sentiment Shows 0.00 or "No News"
+
+**Cause**: No recent headlines found for the ticker
+
+**Solution**: Common for small-cap or international stocks. Focus on fundamentals and technicals instead.
+
+### Insider Activity Shows 0/0
+
+**Cause**: No recent insider transactions or YahooQuery API issue
+
+**Solution**: Not all tickers have active insider trading. This is normal for ETFs, indices, or thinly-traded stocks.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Use Sentiment in Strategy Selection" href="/features/strategy-recommender" icon="compass">
+    Set your directional bias based on sentiment analysis
+  </Card>
+  <Card title="Validate with AI Analysis" href="/features/ai-insights" icon="brain">
+    Get AI-powered analysis that incorporates sentiment and fundamentals
+  </Card>
+</CardGroup>

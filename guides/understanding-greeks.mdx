@@ -1,0 +1,327 @@
+---
+title: 'Understanding Options Greeks'
+description: 'Master Delta, Gamma, Theta, and Vega to control your options risk'
+icon: 'chart-line'
+---
+
+# Understanding Options Greeks
+
+Greeks are mathematical measures of how your options position responds to market changes. OptionStrat AI calculates **Position Greeks** - the total dollar exposure of your entire strategy.
+
+<Note>
+**Critical:** The platform displays Position Greeks in **total USD**, already multiplied by 100 (contract size) and quantity. A Delta of +16.09 means your entire position gains **$16.09** for every $1 the stock moves up.
+</Note>
+
+## The Four Essential Greeks
+
+### Delta (Δ) - Directional Exposure
+
+Delta measures how much your position value changes when the underlying moves $1.
+
+**Position Delta Interpretation:**
+
+- **Positive Delta (+50)**: Position gains $50 if stock rises $1, loses $50 if stock falls $1  
+  → Bullish exposure
+  
+- **Negative Delta (-30)**: Position loses $30 if stock rises $1, gains $30 if stock falls $1  
+  → Bearish exposure
+  
+- **Near Zero Delta (+5)**: Position is relatively neutral to small price movements  
+  → Market neutral strategy
+
+<Tabs>
+  <Tab title="Individual Greeks">
+    For a single option:
+    - **Call Delta:** 0 to +1.0 (ATM ≈ 0.50)
+    - **Put Delta:** -1.0 to 0 (ATM ≈ -0.50)
+    - **Long positions:** Keep the sign
+    - **Short positions:** Invert the sign
+    
+    Example: Selling 1 ATM call (delta 0.50) gives you -0.50 delta, which becomes **-50** position delta after multiplying by 100.
+  </Tab>
+  
+  <Tab title="Strategy Delta">
+    Common strategy delta profiles:
+    
+    | Strategy | Delta Range | Directional Bias |
+    |----------|-------------|------------------|
+    | Long Call | +20 to +80 | Bullish |
+    | Bull Call Spread | +10 to +40 | Moderately Bullish |
+    | Iron Condor | -5 to +5 | Neutral |
+    | Covered Call | +40 to +80 | Bullish (reduced) |
+    | Long Put | -20 to -80 | Bearish |
+    | Long Straddle | -10 to +10 | Neutral (volatility) |
+  </Tab>
+  
+  <Tab title="Managing Delta">
+    **If Delta is too high:**
+    - Add opposing positions (buy puts if too bullish)
+    - Reduce position size
+    - Use spreads instead of naked options
+    
+    **If Delta is too low:**
+    - You may not profit even if direction is correct
+    - Consider closer strikes or more contracts
+    - Acceptable for theta farming strategies
+  </Tab>
+</Tabs>
+
+<Warning>
+High absolute delta (|Delta| > 50) means significant directional risk. If you're wrong about direction, losses accumulate quickly.
+</Warning>
+
+### Gamma (Γ) - Delta Acceleration
+
+Gamma measures how fast your delta changes as the stock moves. It's the "delta of delta."
+
+**Position Gamma Interpretation:**
+
+- **Positive Gamma (+15)**: Delta becomes MORE positive as stock rises, MORE negative as stock falls  
+  → Long options benefit from movement
+  
+- **Negative Gamma (-25)**: Delta becomes LESS favorable as stock moves away  
+  → Short options hurt by movement
+
+<Accordion title="Gamma Deep Dive">
+  **Why Gamma Matters:**
+  
+  Imagine you have +50 delta with +15 gamma:
+  - Stock moves up $2
+  - Your delta increases: 50 + (15 × 2) = **+80 delta**
+  - You're now MORE exposed to further upside
+  - This acceleration helps long option positions
+  
+  Now imagine -50 delta with -15 gamma:
+  - Stock moves down $2  
+  - Your delta becomes: -50 + (-15 × -2) = **-20 delta**
+  - Your protective bearish exposure decreased
+  - This is dangerous for short option sellers
+  
+  **Gamma Risk for Sellers:**
+  
+  Selling options (iron condors, credit spreads) creates negative gamma:
+  - Small movements are fine (theta profits)
+  - Large movements accelerate losses (gamma works against you)
+  - This is why volatility spikes hurt short premium strategies
+</Accordion>
+
+<Tip>
+Positive gamma is your friend in directional trades. Negative gamma requires tight risk management and stop losses.
+</Tip>
+
+### Theta (Θ) - Time Decay
+
+Theta measures how much value your position loses per day as expiration approaches.
+
+**Position Theta Interpretation:**
+
+- **Negative Theta (-18)**: Position loses $18 per day from time decay  
+  → You're paying rent to hold the position
+  
+- **Positive Theta (+25)**: Position gains $25 per day from time decay  
+  → You're collecting rent from short premium
+  
+- **Near Zero Theta**: Time decay is not a significant factor
+
+<Steps>
+  <Step title="Understanding Theta Decay Curve">
+    Theta accelerates as expiration approaches:
+    - **60+ DTE:** Slow decay (~0.05% per day)
+    - **30-60 DTE:** Moderate decay (~0.10% per day)  
+    - **14-30 DTE:** Fast decay (~0.20% per day)
+    - **0-14 DTE:** Extreme decay (~0.50%+ per day)
+    
+    This is why short-term options lose value quickly.
+  </Step>
+  
+  <Step title="Positive Theta Strategies">
+    Earn daily income by selling premium:
+    - Iron Condors
+    - Credit Spreads  
+    - Covered Calls
+    - Cash-Secured Puts
+    
+    **Ideal scenario:** Stock stays flat, you collect theta daily.
+  </Step>
+  
+  <Step title="Negative Theta Strategies">
+    Pay daily cost for directional exposure:
+    - Long Calls/Puts
+    - Debit Spreads
+    - Straddles/Strangles
+    
+    **Need:** Stock to move significantly before theta erodes all value.
+  </Step>
+</Steps>
+
+<Warning>
+**ALERT:** If your theta is below -20, you're losing more than $20 per day. Your position needs to move in your favor QUICKLY or you'll bleed out from time decay.
+</Warning>
+
+### Vega (V) - Volatility Sensitivity
+
+Vega measures how much your position value changes when implied volatility (IV) moves 1 percentage point.
+
+**Position Vega Interpretation:**
+
+- **Positive Vega (+35)**: Position gains $35 if IV increases by 1%  
+  → Long options benefit from volatility expansion
+  
+- **Negative Vega (-40)**: Position loses $40 if IV increases by 1%  
+  → Short options hurt by volatility expansion
+
+<Tabs>
+  <Tab title="IV Expansion/Contraction">
+    **When IV Expands (VIX spike):**
+    - Options become more expensive
+    - Positive vega positions profit
+    - Negative vega positions lose
+    
+    **When IV Contracts (VIX drop):**
+    - Options become cheaper  
+    - Positive vega positions lose
+    - Negative vega positions profit
+    
+    **Common Events:**
+    - Earnings announcements: IV spikes before, crashes after
+    - Market crashes: IV explodes (VIX from 15 to 40+)
+    - Quiet markets: IV slowly decays
+  </Tab>
+  
+  <Tab title="Vega and Strategy Selection">
+    **High IV Environment (VIX > 25):**
+    - Sell premium (negative vega)
+    - Iron condors, credit spreads
+    - Collect inflated premiums
+    - Avoid buying options (expensive)
+    
+    **Low IV Environment (VIX < 15):**  
+    - Buy options (positive vega)
+    - Debit spreads, long calls/puts
+    - Options are cheap
+    - Avoid selling premium (not enough credit)
+  </Tab>
+  
+  <Tab title="Vega Risk Management">
+    **If your vega is high (|Vega| > 50):**
+    - You're exposed to volatility changes
+    - Watch VIX and implied volatility levels
+    - Reduce position before events that change IV
+    - Hedge with opposite vega positions
+  </Tab>
+</Tabs>
+
+## Reading Your Net Greeks
+
+The AI Insights panel displays your portfolio's net Greeks in a grid:
+
+```
+Δ Delta: +16.09     Γ Gamma: -2.45
+Θ Theta: +12.30/day V Vega: -8.75
+```
+
+**This tells you:**
+
+1. **Slightly bullish** (+16 delta) - small upside exposure
+2. **Short gamma** (-2.45) - movement hurts you, need stability  
+3. **Collecting theta** (+12.30) - earning $12.30 daily from time decay
+4. **Short vega** (-8.75) - volatility spike would hurt by $8.75 per 1% IV increase
+
+**Strategy diagnosis:** Likely an **Iron Condor** or **Credit Spread** - collecting premium in a neutral range.
+
+## Greek Alerts and Warnings
+
+The platform automatically flags dangerous Greek levels:
+
+<Accordion title="Theta Alert: < -20">
+  **Warning:** Losing more than $20 per day from time decay.
+  
+  **Action items:**
+  - Move to longer expiration to reduce theta burn
+  - Reduce position size  
+  - Ensure strong directional conviction
+  - Set time-based exit (close if no movement in X days)
+</Accordion>
+
+<Accordion title="Delta Alert: |Δ| > 50">
+  **Warning:** High directional exposure - leveraged position.
+  
+  **Action items:**
+  - Set stop losses at 20-30% of position value
+  - Reduce contracts or use spreads
+  - Monitor position daily
+  - Have plan for being wrong on direction
+</Accordion>
+
+<Accordion title="Gamma Alert: < -10">
+  **Warning:** Severe negative gamma - volatility risk.
+  
+  **Action items:**
+  - Keep position small (2-3% of account max)
+  - Set stop losses BEFORE large moves occur
+  - Monitor for volatility events (earnings, Fed, etc.)
+  - Close position if stock approaches short strikes
+</Accordion>
+
+## Practical Greek Examples
+
+### Example 1: Bull Call Spread
+
+**Position:**
+- Buy 1 SPY $500 Call @ $5.00
+- Sell 1 SPY $510 Call @ $2.50  
+- Net Debit: -$250
+
+**Greeks:**
+- Delta: +32 (moderately bullish)
+- Gamma: +8 (benefits from upward movement)  
+- Theta: -6 (losing $6/day)
+- Vega: +12 (benefits from IV increase)
+
+**Interpretation:** You need SPY to move up steadily. Time decay hurts but is controlled. A volatility spike helps you.
+
+### Example 2: Iron Condor
+
+**Position:**  
+- Sell SPY $490 Put @ $2.00
+- Buy SPY $485 Put @ $1.00
+- Sell SPY $510 Call @ $2.00
+- Buy SPY $515 Call @ $1.00
+- Net Credit: +$200
+
+**Greeks:**
+- Delta: +2 (market neutral)
+- Gamma: -12 (hurt by large moves)
+- Theta: +18 (earning $18/day)
+- Vega: -25 (hurt by IV spike)
+
+**Interpretation:** You want SPY to stay between $490-$510. Collect daily theta. Avoid volatility events.
+
+## Advanced: Greeks vs. Price Movement
+
+The platform's Black-Scholes engine recalculates Greeks as price moves. Understanding this helps you anticipate changes:
+
+| Stock Movement | Delta Change | Gamma Effect | Theta Change | Vega Change |
+|----------------|--------------|--------------|--------------|-------------|
+| Stock up 5% | More positive | Long gains Δ faster | ATM theta peaks | Slightly lower |
+| Stock down 5% | More negative | Short loses Δ faster | ATM theta peaks | Slightly lower |
+| Stock flat | Unchanged | No gamma effect | Decays daily | Slowly decreases |
+| IV spike | Unchanged | Unchanged | Slightly lower | All options gain |
+
+## Pro Tips for Greek Management
+
+1. **Check Greeks BEFORE entering**: Don't discover you have -50 theta after placing the trade
+2. **Monitor changes**: Greeks change as price moves - check daily
+3. **Balance opposing Greeks**: Long calls (positive vega) + short calls (negative vega) = neutral vega
+4. **Use Greeks to size**: Higher gamma/theta = smaller position size
+5. **Greeks > profits**: A winning trade with bad Greeks is an accident waiting to happen
+
+## Next Steps
+
+- Use the [Payoff Simulator](/guides/interpreting-heatmaps) to see how Greeks affect P&L over time
+- Let the [AI Analyst](/guides/using-ai-analyst) evaluate your Greek exposure against market conditions  
+- Read [Risk Management](/guides/risk-management) to set proper stop losses based on Greeks
+
+<Tip>
+Greeks are predictive, not guaranteed. They estimate risk based on mathematical models, but real markets can deviate. Always use stop losses.
+</Tip>

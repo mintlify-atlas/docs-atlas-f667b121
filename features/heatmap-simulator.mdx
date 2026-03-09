@@ -1,0 +1,335 @@
+---
+title: "Payoff Simulator"
+description: "Visualize your strategy's profit and loss across price movements and time decay with advanced Black-Scholes modeling"
+---
+
+## Overview
+
+The Payoff Simulator transforms your multi-leg strategy into an interactive profit/loss chart. Using real-time Black-Scholes calculations, it shows exactly how your position will perform across different underlying prices and time horizons.
+
+<CardGroup cols={2}>
+  <Card title="Real-Time Calculation" icon="bolt">
+    Black-Scholes Greeks computed instantly as you adjust parameters
+  </Card>
+  <Card title="Time Decay Visualization" icon="clock">
+    See how theta affects your position from today to expiration
+  </Card>
+  <Card title="Volatility Scenarios" icon="wave">
+    Simulate IV expansion or contraction with the volatility shock slider
+  </Card>
+  <Card title="Key Metrics Dashboard" icon="gauge">
+    Max profit, max loss, break-even points, and net premium at a glance
+  </Card>
+</CardGroup>
+
+## Understanding the Payoff Chart
+
+### Chart Elements
+
+The payoff chart displays a profit/loss curve that shows your strategy's performance:
+
+- **X-axis**: Underlying price at the selected time horizon
+- **Y-axis**: Profit or loss in dollars
+- **Green area**: Profitable price zones
+- **Red area**: Loss zones
+- **Zero line**: Break-even (dashed white line)
+
+<Note>
+The chart automatically adjusts the price range to show relevant strikes. It typically displays from 20% below to 20% above the current spot price.
+</Note>
+
+### Color-Coded Performance
+
+The area chart uses a gradient fill:
+
+```
+Profit Zone (Green) → Above the zero line
+Break-Even Zone     → At the zero line  
+Loss Zone (Red)     → Below the zero line
+```
+
+Hover over any point to see:
+- Exact underlying price at that point
+- Profit/loss value
+
+## Interactive Controls
+
+### Volatility Shock Slider
+
+Adjust the implied volatility (IV) to simulate market conditions:
+
+```
+Range: -50% to +50% of current IV
+Default: 0% (current market IV)
+```
+
+**Use Cases:**
+
+- **Increase IV (+)**: Simulate a volatility spike (earnings, news events)
+- **Decrease IV (-)**: Simulate volatility crush (post-earnings)
+
+<Tip>
+Vega-positive strategies (long options) benefit from IV increases. Vega-negative strategies (short options) benefit from IV decreases.
+</Tip>
+
+### Days to Expiration Slider
+
+Select the time horizon for your analysis:
+
+```
+Range: 1 day to your nearest expiration
+Default: Maximum DTE of your strategy
+```
+
+The slider dynamically adjusts based on your shortest-dated leg. If you have a 30-day option, the slider maxes out at 30 days.
+
+<Warning>
+Theta decay accelerates as expiration approaches. The last 10 days show the most dramatic time decay for ATM options.
+</Warning>
+
+## Key Metrics Panel
+
+The metrics panel displays four critical values:
+
+### Net Premium
+
+**What it means**: The initial cash flow when entering the strategy
+
+- **Positive (green)**: You receive a credit (common for spreads, iron condors)
+- **Negative (red)**: You pay a debit (common for long straddles, directional plays)
+
+```
+Example: +$450 means you received $450 to open the position
+```
+
+### Max Loss
+
+**What it means**: The worst-case scenario loss if the underlying moves against you
+
+For defined-risk strategies (spreads, iron condors), this is the width of the spread minus the premium received:
+
+```
+Bull Put Spread: $5 wide, $1.50 credit
+Max Loss = ($5 - $1.50) × 100 = $350
+```
+
+<Note>
+For undefined-risk strategies like naked shorts or short strangles, max loss can be theoretically unlimited.
+</Note>
+
+### Break-Even Points
+
+**What it means**: Underlying prices where your profit/loss equals zero
+
+- Single-leg strategies typically have one break-even
+- Spreads have one or two break-evens
+- Iron condors have two break-evens (upper and lower)
+
+```
+Iron Condor example: $95.50 / $104.50
+Profit zone: Between these two prices
+```
+
+### Max Profit
+
+**What it means**: The best-case scenario profit
+
+For credit spreads and iron condors, max profit is typically the net premium received:
+
+```
+Iron Condor: $450 credit = $450 max profit
+Achieved when the underlying stays between short strikes at expiration
+```
+
+## Real-Time Black-Scholes Engine
+
+The simulator recalculates the entire payoff surface whenever you:
+
+- Add or remove legs
+- Adjust the volatility shock
+- Move the days to expiration slider
+- Change the underlying ticker
+
+Calculation includes:
+
+- **Delta**: Directional exposure
+- **Gamma**: Rate of delta change
+- **Theta**: Time decay per day
+- **Vega**: Sensitivity to IV changes
+- **Rho**: Interest rate sensitivity (0.05% risk-free rate)
+
+<Tip>
+The simulator runs in your browser using optimized JavaScript. Typical calculation time: under 100ms for a 4-leg strategy.
+</Tip>
+
+## Common Payoff Patterns
+
+### Bullish Strategies
+
+**Bull Put Spread**
+
+- Upward sloping line on the left
+- Flat max profit plateau on the right
+- One break-even point below current price
+
+```
+Profit if: Stock stays above short put strike
+Max risk: Below long put strike
+```
+
+### Bearish Strategies
+
+**Bear Call Spread**
+
+- Flat max profit plateau on the left
+- Downward sloping line on the right
+- One break-even point above current price
+
+```
+Profit if: Stock stays below short call strike
+Max risk: Above long call strike
+```
+
+### Neutral Strategies
+
+**Iron Condor**
+
+- Flat max profit in the center
+- Symmetrical slopes on both sides
+- Two break-even points (lower and upper)
+
+```
+Profit if: Stock stays between short strikes
+Max risk: Outside the wings (either side)
+```
+
+**Short Straddle/Strangle**
+
+- Inverted V-shape (loss increases as price moves away from center)
+- Max profit at the center strike(s)
+- Two break-even points
+- Unlimited risk on both sides
+
+<Warning>
+Short straddles and strangles have undefined risk. Consider using iron condors instead for defined-risk neutral strategies.
+</Warning>
+
+## Scenario Analysis
+
+### Earnings Volatility Play
+
+**Setup**: Long straddle with volatility shock simulation
+
+<Steps>
+  <Step title="Build the Straddle">
+    Buy ATM call and put with the same strike and expiration
+  </Step>
+  
+  <Step title="Simulate IV Spike">
+    Move the volatility shock slider to +30% or +50%
+  </Step>
+  
+  <Step title="Check Profitability">
+    See how much the position gains from IV expansion alone, even before the stock moves
+  </Step>
+</Steps>
+
+### Theta Decay Observation
+
+**Setup**: Any credit strategy (iron condor, short strangle)
+
+<Steps>
+  <Step title="Set Days to Max">
+    Move the days slider to your expiration date
+  </Step>
+  
+  <Step title="Walk Forward in Time">
+    Gradually decrease the days slider from 30 → 20 → 10 → 5 → 1
+  </Step>
+  
+  <Step title="Watch Theta Kick In">
+    Observe how your profit increases as time passes (assuming price stays in the profit zone)
+  </Step>
+</Steps>
+
+### Volatility Crush Analysis
+
+**Setup**: Post-earnings scenario for credit strategies
+
+<Steps>
+  <Step title="Baseline Position">
+    View your iron condor at current IV (volatility shock = 0%)
+  </Step>
+  
+  <Step title="Simulate Crush">
+    Move the volatility shock slider to -30%
+  </Step>
+  
+  <Step title="Assess Impact">
+    See how much you benefit from the IV contraction (green area expands)
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Test Extreme Scenarios" icon="triangle-exclamation">
+    Always simulate ±2 standard deviation moves in both price and volatility
+  </Card>
+  <Card title="Understand Your Break-Evens" icon="arrows-left-right">
+    Know exactly where your strategy breaks even before entering the trade
+  </Card>
+  <Card title="Watch Theta Decay" icon="clock-rotate-left">
+    Credit strategies benefit from time decay. Monitor theta daily
+  </Card>
+  <Card title="Plan Your Exit" icon="door-open">
+    Identify exit prices on the chart before entering the trade
+  </Card>
+</CardGroup>
+
+## When to Use Different Time Horizons
+
+| Days to Expiration | Use Case |
+|--------------------|----------|
+| **1-5 days** | See expiration P&L (intrinsic value only) |
+| **7-14 days** | Short-term credit strategies, weekly options |
+| **15-30 days** | Standard monthly options, theta decay analysis |
+| **30-60 days** | Calendar spreads, diagonal strategies |
+| **60+ days** | LEAPS, long-term directional plays |
+
+<Note>
+The simulator automatically limits your time horizon based on your shortest-dated leg. You cannot simulate beyond your nearest expiration.
+</Note>
+
+## Troubleshooting
+
+### Chart Shows Flat Line
+
+**Cause**: No legs added to the strategy
+
+**Solution**: Build a strategy in the Option Builder first
+
+### "Calculando super-superficie" Message
+
+**Cause**: The Black-Scholes engine is computing the payoff surface
+
+**Solution**: Wait 1-2 seconds for calculation to complete
+
+### Unexpected Profit Zones
+
+**Cause**: Check for mismatched buy/sell actions on legs
+
+**Solution**: Review your active legs. Ensure buy/sell actions match your intended strategy
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get AI Risk Analysis" href="/features/ai-insights" icon="brain">
+    Understand your Greeks and risk exposure with AI-powered insights
+  </Card>
+  <Card title="Find Better Strategies" href="/features/strategy-recommender" icon="lightbulb">
+    Let the optimizer suggest high-probability strategies
+  </Card>
+</CardGroup>

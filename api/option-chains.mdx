@@ -1,0 +1,292 @@
+---
+title: 'Option Chains'
+description: 'Retrieve options chain data and available expirations'
+icon: 'link'
+---
+
+## Overview
+
+The Option Chains endpoints provide access to real-time options data including available expiration dates, complete option chains with Greeks, and market pricing.
+
+---
+
+## Get Available Expirations
+
+<RequestExample>
+```bash cURL
+curl http://localhost:8000/api/options/expirations/AAPL
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "http://localhost:8000/api/options/expirations/AAPL"
+)
+data = response.json()
+print(data['expirations'])
+```
+</RequestExample>
+
+<ParamField path="ticker" type="string" required>
+  Stock ticker symbol (e.g., "AAPL", "SPY", "TSLA")
+</ParamField>
+
+### Response
+
+<ResponseField name="ticker" type="string">
+  Ticker symbol in uppercase
+</ResponseField>
+
+<ResponseField name="spot_price" type="float">
+  Current spot price of the underlying asset
+</ResponseField>
+
+<ResponseField name="risk_free_rate" type="float">
+  Current risk-free interest rate used for calculations
+</ResponseField>
+
+<ResponseField name="expirations" type="array">
+  List of all available expiration dates in YYYY-MM-DD format
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "ticker": "AAPL",
+  "spot_price": 175.43,
+  "risk_free_rate": 0.05,
+  "expirations": [
+    "2024-12-20",
+    "2024-12-27",
+    "2025-01-03",
+    "2025-01-17",
+    "2025-02-21"
+  ]
+}
+```
+
+<Note>
+This endpoint is ultra-fast as it only queries the expiration list without downloading full option chains.
+</Note>
+
+---
+
+## Get Option Chain
+
+<RequestExample>
+```bash cURL
+curl "http://localhost:8000/api/options/chain/AAPL?expiration=2024-12-20"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "http://localhost:8000/api/options/chain/AAPL",
+    params={"expiration": "2024-12-20"}
+)
+chain = response.json()
+```
+</RequestExample>
+
+<ParamField path="ticker" type="string" required>
+  Stock ticker symbol
+</ParamField>
+
+<ParamField query="expiration" type="string">
+  Expiration date in YYYY-MM-DD format. If not provided, uses the closest expiration >= 7 days out.
+</ParamField>
+
+### Response
+
+<ResponseField name="ticker" type="string">
+  Ticker symbol in uppercase
+</ResponseField>
+
+<ResponseField name="spot_price" type="float">
+  Current spot price of the underlying
+</ResponseField>
+
+<ResponseField name="risk_free_rate" type="float">
+  Risk-free rate used for Greeks calculations
+</ResponseField>
+
+<ResponseField name="expiration" type="string">
+  The expiration date used for this chain
+</ResponseField>
+
+<ResponseField name="chain" type="object">
+  Contains `calls` and `puts` arrays
+  
+  <Expandable title="chain object">
+    <ResponseField name="calls" type="array">
+      Array of call option contracts with full details
+    </ResponseField>
+    
+    <ResponseField name="puts" type="array">
+      Array of put option contracts with full details
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Option Contract Fields
+
+Each option contract (call or put) includes:
+
+<ResponseField name="strike" type="float">
+  Strike price of the option
+</ResponseField>
+
+<ResponseField name="bid" type="float">
+  Current bid price
+</ResponseField>
+
+<ResponseField name="ask" type="float">
+  Current ask price
+</ResponseField>
+
+<ResponseField name="mid" type="float">
+  Mid price calculated as (bid + ask) / 2. Falls back to lastPrice if bid or ask is 0.
+</ResponseField>
+
+<ResponseField name="lastPrice" type="float">
+  Last traded price
+</ResponseField>
+
+<ResponseField name="volume" type="integer">
+  Trading volume
+</ResponseField>
+
+<ResponseField name="openInterest" type="integer">
+  Open interest
+</ResponseField>
+
+<ResponseField name="impliedVolatility" type="float">
+  Implied volatility (IV)
+</ResponseField>
+
+<ResponseField name="dte" type="integer">
+  Days to expiration
+</ResponseField>
+
+<ResponseField name="type" type="string">
+  Option type: "call" or "put"
+</ResponseField>
+
+<ResponseField name="expirationDate" type="string">
+  Expiration date in ISO format
+</ResponseField>
+
+### Greeks (Black-Scholes Calculated)
+
+<ResponseField name="delta" type="float">
+  Delta - Rate of change of option price with respect to underlying price
+</ResponseField>
+
+<ResponseField name="gamma" type="float">
+  Gamma - Rate of change of delta
+</ResponseField>
+
+<ResponseField name="theta" type="float">
+  Theta - Time decay per day
+</ResponseField>
+
+<ResponseField name="vega" type="float">
+  Vega - Sensitivity to volatility changes
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "ticker": "AAPL",
+  "spot_price": 175.43,
+  "risk_free_rate": 0.05,
+  "expiration": "2024-12-20",
+  "chain": {
+    "calls": [
+      {
+        "strike": 170.0,
+        "bid": 6.50,
+        "ask": 6.70,
+        "mid": 6.60,
+        "lastPrice": 6.55,
+        "volume": 1250,
+        "openInterest": 3420,
+        "impliedVolatility": 0.28,
+        "dte": 45,
+        "type": "call",
+        "expirationDate": "2024-12-20",
+        "delta": 0.65,
+        "gamma": 0.035,
+        "theta": -0.045,
+        "vega": 0.12
+      }
+    ],
+    "puts": [
+      {
+        "strike": 170.0,
+        "bid": 2.10,
+        "ask": 2.25,
+        "mid": 2.175,
+        "lastPrice": 2.15,
+        "volume": 890,
+        "openInterest": 2150,
+        "impliedVolatility": 0.26,
+        "dte": 45,
+        "type": "put",
+        "expirationDate": "2024-12-20",
+        "delta": -0.35,
+        "gamma": 0.035,
+        "theta": -0.038,
+        "vega": 0.11
+      }
+    ]
+  }
+}
+```
+
+## Error Responses
+
+<ResponseField name="404" type="error">
+  No options found for the ticker
+  ```json
+  {
+    "detail": "No options found for XYZ"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="500" type="error">
+  Internal server error during data fetching
+  ```json
+  {
+    "detail": "Error message"
+  }
+  ```
+</ResponseField>
+
+## Implementation Notes
+
+<Info>
+**Greeks Calculation**: All Greeks (delta, gamma, theta, vega) are calculated using the Black-Scholes-Merton model with:
+- Current spot price
+- Strike price
+- Time to expiration (in years)
+- Risk-free rate (currently 5%)
+- Implied volatility from market data
+- Dividend yield (q) = 0.0
+</Info>
+
+<Warning>
+**Data Source**: Options data is fetched from Yahoo Finance. Market hours and data availability may affect response times and data freshness.
+</Warning>
+
+## Use Cases
+
+- **Strategy Building**: Fetch option chains to build multi-leg strategies
+- **Greeks Analysis**: Access calculated Greeks without separate computation
+- **Liquidity Screening**: Filter by volume and open interest
+- **IV Analysis**: Compare implied volatility across strikes

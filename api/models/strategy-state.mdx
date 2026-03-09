@@ -1,0 +1,204 @@
+---
+title: 'StrategyState'
+description: 'Complete model for defining an options strategy with market context'
+---
+
+## Overview
+
+The `StrategyState` model represents a complete options strategy configuration sent to the API for analysis, heatmap generation, or AI insights. It includes the underlying asset price, volatility parameters, time horizon, and all option legs that make up the strategy.
+
+This is the primary request model used across multiple endpoints including:
+- `/api/heatmap` - Generate profit/loss heatmaps
+- `/api/ai/greeks` - Calculate portfolio Greeks
+- `/api/ai/insights` - Get AI-powered strategy analysis
+
+## Model Structure
+
+<ParamField path="underlying_price" type="float" required>
+  Current or simulated price of the underlying asset. Must be greater than 0.
+  
+  **Example:** `150.50` for a stock trading at $150.50
+</ParamField>
+
+<ParamField path="volatility_shock" type="float" default="0.0">
+  Volatility shock to simulate, expressed as a decimal (e.g., 0.05 for +5% volatility increase).
+  
+  This allows you to stress-test your strategy under different volatility scenarios:
+  - `0.0` - Use base volatility
+  - `0.05` - Simulate +5% volatility increase
+  - `-0.03` - Simulate -3% volatility decrease
+</ParamField>
+
+<ParamField path="days_to_simulate" type="integer" default="30">
+  Number of days forward to simulate for heatmap generation. Must be between 1 and 365.
+  
+  **Common values:**
+  - `7` - One week outlook
+  - `30` - One month outlook (default)
+  - `90` - Quarterly outlook
+</ParamField>
+
+<ParamField path="legs" type="OptionLeg[]" required>
+  Array of option positions that make up the strategy. Must contain at least one leg.
+  
+  Each leg represents a call, put, or stock position. See [OptionLeg](/api/models/option-leg) for detailed structure.
+</ParamField>
+
+<ParamField path="ticker" type="string" optional>
+  Symbol of the underlying asset (e.g., "AAPL", "SPY", "TSLA").
+  
+  Used for fetching real-time market data and enhancing AI analysis with market context.
+</ParamField>
+
+<ParamField path="market_context" type="object" optional>
+  Pre-fetched market data including yfinance price history and sentiment analysis.
+  
+  This is typically populated internally by the backend when fetching market data. You can optionally provide this to avoid redundant API calls.
+</ParamField>
+
+## Example JSON
+
+### Simple Strategy (Iron Condor)
+
+```json
+{
+  "underlying_price": 150.00,
+  "volatility_shock": 0.0,
+  "days_to_simulate": 30,
+  "ticker": "AAPL",
+  "legs": [
+    {
+      "type": "put",
+      "action": "buy",
+      "strike": 140.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 2.50
+    },
+    {
+      "type": "put",
+      "action": "sell",
+      "strike": 145.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 4.20
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 155.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 4.10
+    },
+    {
+      "type": "call",
+      "action": "buy",
+      "strike": 160.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 2.40
+    }
+  ]
+}
+```
+
+### With Volatility Stress Test
+
+```json
+{
+  "underlying_price": 420.50,
+  "volatility_shock": 0.10,
+  "days_to_simulate": 60,
+  "ticker": "SPY",
+  "legs": [
+    {
+      "type": "call",
+      "action": "buy",
+      "strike": 425.0,
+      "expiration": "2026-05-15",
+      "qty": 2,
+      "premium": 8.50,
+      "volume": 1250,
+      "open_interest": 5420
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 430.0,
+      "expiration": "2026-05-15",
+      "qty": 2,
+      "premium": 5.20,
+      "volume": 890,
+      "open_interest": 3210
+    }
+  ]
+}
+```
+
+## Usage in API Endpoints
+
+### Calculate Portfolio Greeks
+
+```bash
+curl -X POST https://api.optionstrat.ai/api/ai/greeks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_price": 150.00,
+    "ticker": "AAPL",
+    "legs": [
+      {
+        "type": "call",
+        "action": "buy",
+        "strike": 155.0,
+        "expiration": "2026-04-17",
+        "qty": 1,
+        "premium": 3.50
+      }
+    ]
+  }'
+```
+
+### Generate Heatmap
+
+```bash
+curl -X POST https://api.optionstrat.ai/api/heatmap \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_price": 150.00,
+    "days_to_simulate": 45,
+    "ticker": "AAPL",
+    "legs": [...]
+  }'
+```
+
+## Field Validation
+
+<ResponseField name="underlying_price" type="float">
+  ✅ Must be greater than 0
+  
+  ❌ Negative or zero values will be rejected
+</ResponseField>
+
+<ResponseField name="volatility_shock" type="float">
+  ✅ Can be positive (increase vol) or negative (decrease vol)
+  
+  ✅ Typical range: -0.5 to 0.5 (-50% to +50%)
+</ResponseField>
+
+<ResponseField name="days_to_simulate" type="integer">
+  ✅ Must be between 1 and 365 (inclusive)
+  
+  ❌ Values outside this range will be rejected
+</ResponseField>
+
+<ResponseField name="legs" type="array">
+  ✅ Must contain at least 1 leg
+  
+  ❌ Empty array will be rejected
+</ResponseField>
+
+## Related Models
+
+- [OptionLeg](/api/models/option-leg) - Individual option or stock position
+- [Greeks](/api/models/greeks) - Portfolio risk metrics (Delta, Gamma, Theta, Vega)

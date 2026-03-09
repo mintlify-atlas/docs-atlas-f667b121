@@ -1,0 +1,119 @@
+---
+title: "Introduction"
+description: "AI-powered American options simulator with Black-Scholes-Merton pricing, market sentiment analysis, and intelligent strategy recommendations"
+---
+
+## Welcome to OptionStrat AI
+
+OptionStrat AI is a comprehensive platform for analyzing and simulating American-style financial options. Built for retail investors, institutional traders, and options professionals, it combines advanced quantitative models with artificial intelligence to provide deep insights into options strategies.
+
+<CardGroup cols={2}>
+  <Card title="Get Started" icon="rocket" href="/quickstart">
+    Set up OptionStrat AI and run your first strategy simulation
+  </Card>
+  <Card title="Core Features" icon="sparkles" href="/features/option-builder">
+    Explore the platform's powerful features
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate OptionStrat AI into your applications
+  </Card>
+  <Card title="Technical Reference" icon="book" href="/technical/architecture">
+    Deep dive into the architecture and models
+  </Card>
+</CardGroup>
+
+## Key Features
+
+OptionStrat AI goes beyond typical options calculators by fusing quantitative finance, real-time market data, and AI-powered analysis.
+
+<CardGroup cols={2}>
+  <Card title="Real-Time Options Chain" icon="chart-line">
+    Live data from Yahoo Finance including bid/ask spreads, volume, open interest, and implied volatility
+  </Card>
+  <Card title="Interactive Strategy Builder" icon="hammer">
+    Build complex multi-leg strategies with stocks and options, including covered calls, iron condors, and custom spreads
+  </Card>
+  <Card title="Dynamic P&L Heatmap" icon="grid-2">
+    Visualize profit and loss across price movements and time decay using Black-Scholes-Merton pricing
+  </Card>
+  <Card title="AI Portfolio Analyst" icon="brain">
+    LLM-powered analysis that interprets your Greeks, market sentiment, and insider trading activity
+  </Card>
+  <Card title="Market Sentiment Analysis" icon="newspaper">
+    Algorithmic sentiment scoring from FinViz news using VaderSentiment NLP
+  </Card>
+  <Card title="Strategy Recommender" icon="lightbulb">
+    Intelligent recommendations based on market outlook, risk profile, and probability of profit
+  </Card>
+</CardGroup>
+
+## What Makes It Different
+
+<Note>
+OptionStrat AI is designed specifically for American-style options with early exercise capabilities, using advanced pricing models that account for dividends and time-varying volatility.
+</Note>
+
+### Quantitative Precision
+
+The platform implements multiple pricing models:
+- **Black-Scholes-Merton** for European-style approximations and Greeks calculation
+- **Binomial trees** (Cox-Ross-Rubinstein) for American option valuation
+- **Trinomial trees** for faster convergence and higher accuracy
+
+All models account for dividends, risk-free rates, and volatility shocks to provide realistic valuations.
+
+### AI-Powered Insights
+
+Unlike traditional calculators that just show numbers, OptionStrat AI's LLM analyst:
+- Interprets your portfolio Greeks in plain language
+- Combines technical analysis with market sentiment and insider trading signals
+- Warns you about hidden risks like negative gamma exposure or accelerated theta decay
+- Provides actionable recommendations based on your specific position
+
+### Real Market Context
+
+Every analysis incorporates:
+- Recent news headlines with sentiment scoring
+- Insider trading activity (13F filings via YahooQuery)
+- Analyst price targets and recommendations
+- Volume and open interest for liquidity assessment
+
+## Architecture Overview
+
+<Steps>
+  <Step title="FastAPI Backend">
+    Asynchronous Python backend handling data ingestion, quantitative calculations, and AI orchestration
+  </Step>
+  <Step title="React Frontend">
+    Modern React 18 application with Zustand state management for real-time updates and smooth interactions
+  </Step>
+  <Step title="Quantitative Engine">
+    NumPy and SciPy-powered calculation engine for Greeks, heatmaps, and pricing models
+  </Step>
+  <Step title="AI Layer">
+    LiteLLM router supporting OpenAI and OpenRouter for structured analysis and recommendations
+  </Step>
+</Steps>
+
+## Use Cases
+
+<AccordionGroup>
+  <Accordion title="Retail Traders">
+    Analyze covered calls, protective puts, and spreads before placing trades. Understand your risk exposure with visual heatmaps and AI-guided insights.
+  </Accordion>
+  <Accordion title="Options Sellers (Theta Gang)">
+    Find high-probability credit spreads and iron condors with the strategy recommender. Filter by liquidity, days to expiration, and probability of profit.
+  </Accordion>
+  <Accordion title="Portfolio Managers">
+    Hedge equity positions with options overlays. Simulate complex multi-leg strategies and stress-test under different volatility scenarios.
+  </Accordion>
+  <Accordion title="Quantitative Researchers">
+    Access pricing models and Greeks calculations via the API. Build custom trading systems on top of OptionStrat AI's infrastructure.
+  </Accordion>
+</AccordionGroup>
+
+## Get Started
+
+<Card title="Quickstart Guide" icon="play" href="/quickstart">
+  Install and run OptionStrat AI in under 5 minutes
+</Card>

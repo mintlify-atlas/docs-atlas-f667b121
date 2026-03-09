@@ -1,0 +1,331 @@
+---
+title: 'Calculations'
+description: 'Generate P&L heatmaps and strategy analysis'
+icon: 'calculator'
+---
+
+## Overview
+
+The Calculations endpoint is the **core engine** of OptionStrat AI. It generates 2D profit/loss heatmaps by simulating your options strategy across different underlying prices and time horizons using Black-Scholes modeling.
+
+---
+
+## Generate Heatmap
+
+<RequestExample>
+```bash cURL
+curl -X POST http://localhost:8000/api/calculations/heatmap \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_price": 175.43,
+    "volatility_shock": 0.0,
+    "days_to_simulate": 30,
+    "ticker": "AAPL",
+    "legs": [
+      {
+        "type": "call",
+        "action": "sell",
+        "strike": 180.0,
+        "expiration": "2024-12-20",
+        "qty": 1,
+        "premium": 3.50
+      },
+      {
+        "type": "call",
+        "action": "buy",
+        "strike": 185.0,
+        "expiration": "2024-12-20",
+        "qty": 1,
+        "premium": 1.75
+      }
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+payload = {
+    "underlying_price": 175.43,
+    "volatility_shock": 0.0,
+    "days_to_simulate": 30,
+    "ticker": "AAPL",
+    "legs": [
+        {
+            "type": "call",
+            "action": "sell",
+            "strike": 180.0,
+            "expiration": "2024-12-20",
+            "qty": 1,
+            "premium": 3.50
+        },
+        {
+            "type": "call",
+            "action": "buy",
+            "strike": 185.0,
+            "expiration": "2024-12-20",
+            "qty": 1,
+            "premium": 1.75
+        }
+    ]
+}
+
+response = requests.post(
+    "http://localhost:8000/api/calculations/heatmap",
+    json=payload
+)
+result = response.json()
+```
+</RequestExample>
+
+### Request Body (StrategyState)
+
+<ParamField body="underlying_price" type="float" required>
+  Current or simulated price of the underlying asset. Must be greater than 0.
+</ParamField>
+
+<ParamField body="volatility_shock" type="float" default={0.0}>
+  Volatility shock to simulate (e.g., 0.05 for +5% IV increase, -0.10 for -10% IV decrease)
+</ParamField>
+
+<ParamField body="days_to_simulate" type="integer" default={30}>
+  Number of days forward to simulate in the heatmap. Range: 1-365.
+</ParamField>
+
+<ParamField body="ticker" type="string">
+  Stock ticker symbol (e.g., "AAPL"). Optional but recommended for context.
+</ParamField>
+
+<ParamField body="legs" type="array" required>
+  Array of option legs (positions). Minimum 1 leg required.
+  
+  <Expandable title="OptionLeg object">
+    <ParamField body="type" type="string" required>
+      Type of position: `"call"`, `"put"`, or `"stock"`
+    </ParamField>
+    
+    <ParamField body="action" type="string" required>
+      Action: `"buy"` or `"sell"`
+    </ParamField>
+    
+    <ParamField body="strike" type="float" required>
+      Strike price. Must be greater than 0.
+    </ParamField>
+    
+    <ParamField body="expiration" type="string" required>
+      Expiration date in YYYY-MM-DD format
+    </ParamField>
+    
+    <ParamField body="qty" type="integer" required>
+      Number of contracts. Must be greater than 0. (1 contract = 100 shares)
+    </ParamField>
+    
+    <ParamField body="premium" type="float" default={0.0}>
+      Premium paid or received per contract
+    </ParamField>
+    
+    <ParamField body="volume" type="integer" default={0}>
+      Trading volume (optional metadata)
+    </ParamField>
+    
+    <ParamField body="open_interest" type="integer" default={0}>
+      Open interest (optional metadata)
+    </ParamField>
+  </Expandable>
+</ParamField>
+
+<ParamField body="market_context" type="object">
+  Optional pre-fetched market data and sentiment information
+</ParamField>
+
+### Response
+
+<ResponseField name="status" type="string">
+  Status of the calculation: `"success"` or `"error"`
+</ResponseField>
+
+<ResponseField name="max_profit" type="float">
+  Maximum potential profit across all simulated scenarios
+</ResponseField>
+
+<ResponseField name="max_loss" type="float">
+  Maximum potential loss across all simulated scenarios
+</ResponseField>
+
+<ResponseField name="heatmap_grid" type="array">
+  2D grid containing P&L calculations for different price/time combinations. Each element contains:
+  - Price point
+  - Time point (days forward)
+  - P&L value at that coordinate
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "max_profit": 175.00,
+  "max_loss": -325.00,
+  "heatmap_grid": [
+    {
+      "price": 170.0,
+      "day": 0,
+      "pnl": 175.00
+    },
+    {
+      "price": 170.0,
+      "day": 15,
+      "pnl": 150.25
+    },
+    {
+      "price": 175.0,
+      "day": 0,
+      "pnl": 175.00
+    },
+    {
+      "price": 180.0,
+      "day": 0,
+      "pnl": 175.00
+    },
+    {
+      "price": 185.0,
+      "day": 15,
+      "pnl": -250.00
+    },
+    {
+      "price": 190.0,
+      "day": 30,
+      "pnl": -325.00
+    }
+  ]
+}
+```
+
+### Error Response
+
+```json
+{
+  "status": "error",
+  "heatmap_grid": []
+}
+```
+
+## Strategy Examples
+
+<Accordion title="Bull Call Spread">
+```json
+{
+  "underlying_price": 175.43,
+  "days_to_simulate": 30,
+  "legs": [
+    {
+      "type": "call",
+      "action": "buy",
+      "strike": 175.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 5.00
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 180.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 3.00
+    }
+  ]
+}
+```
+</Accordion>
+
+<Accordion title="Iron Condor">
+```json
+{
+  "underlying_price": 175.43,
+  "days_to_simulate": 45,
+  "legs": [
+    {
+      "type": "put",
+      "action": "buy",
+      "strike": 165.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 1.00
+    },
+    {
+      "type": "put",
+      "action": "sell",
+      "strike": 170.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 2.50
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 180.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 2.50
+    },
+    {
+      "type": "call",
+      "action": "buy",
+      "strike": 185.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 1.00
+    }
+  ]
+}
+```
+</Accordion>
+
+<Accordion title="Covered Call">
+```json
+{
+  "underlying_price": 175.43,
+  "days_to_simulate": 30,
+  "legs": [
+    {
+      "type": "stock",
+      "action": "buy",
+      "strike": 175.43,
+      "expiration": "2099-12-31",
+      "qty": 1,
+      "premium": 175.43
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 180.0,
+      "expiration": "2024-12-20",
+      "qty": 1,
+      "premium": 3.50
+    }
+  ]
+}
+```
+</Accordion>
+
+## Implementation Details
+
+<Info>
+**Calculation Engine**: The heatmap uses Black-Scholes-Merton model to price options at different:
+- **Price points**: Creates a grid of underlying prices (typically ±20% from current price)
+- **Time points**: Simulates P&L from today through `days_to_simulate`
+- **Volatility**: Applies `volatility_shock` to implied volatility
+</Info>
+
+<Warning>
+**Performance**: Complex strategies with many legs may take longer to calculate. The endpoint typically responds in 1-3 seconds for standard strategies.
+</Warning>
+
+## Use Cases
+
+- **Visual Strategy Analysis**: Generate data for P&L heatmap visualizations
+- **Risk Assessment**: Identify max profit and max loss scenarios
+- **What-If Analysis**: Test different volatility scenarios with `volatility_shock`
+- **Time Decay Modeling**: See how strategy P&L evolves over time
+- **Price Target Planning**: Visualize profit zones across price ranges

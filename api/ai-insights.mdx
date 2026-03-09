@@ -1,0 +1,318 @@
+---
+title: 'AI Insights'
+description: 'Greeks calculation and LLM-powered strategy analysis'
+icon: 'brain'
+---
+
+## Overview
+
+The AI Insights endpoints provide two levels of analysis:
+1. **Fast Greeks** - Real-time Greeks calculation with instant risk scoring (no LLM)
+2. **Full LLM Analysis** - Comprehensive AI-powered strategy evaluation
+
+---
+
+## Compute Greeks (Fast)
+
+<RequestExample>
+```bash cURL
+curl -X POST http://localhost:8000/api/ai/greeks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_price": 175.43,
+    "volatility_shock": 0.0,
+    "days_to_simulate": 30,
+    "legs": [
+      {
+        "type": "call",
+        "action": "sell",
+        "strike": 180.0,
+        "expiration": "2024-12-20",
+        "qty": 2,
+        "premium": 3.50
+      }
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+payload = {
+    "underlying_price": 175.43,
+    "volatility_shock": 0.0,
+    "legs": [
+        {
+            "type": "call",
+            "action": "sell",
+            "strike": 180.0,
+            "expiration": "2024-12-20",
+            "qty": 2,
+            "premium": 3.50
+        }
+    ]
+}
+
+response = requests.post(
+    "http://localhost:8000/api/ai/greeks",
+    json=payload
+)
+greeks = response.json()
+```
+</RequestExample>
+
+### Request Body
+
+Accepts a `StrategyState` object (same as [Calculations endpoint](/api/calculations)).
+
+<ParamField body="underlying_price" type="float" required>
+  Current price of the underlying asset
+</ParamField>
+
+<ParamField body="volatility_shock" type="float" default={0.0}>
+  IV adjustment to apply (e.g., 0.05 for +5% volatility)
+</ParamField>
+
+<ParamField body="legs" type="array" required>
+  Array of option positions (see [Calculations](/api/calculations) for leg structure)
+</ParamField>
+
+### Response
+
+<ResponseField name="risk_score" type="integer">
+  Risk score from 1-10 based on Greeks exposure:
+  - 1-3: Low risk
+  - 4-6: Moderate risk
+  - 7-10: High risk
+</ResponseField>
+
+<ResponseField name="net_greeks" type="object">
+  Net Greeks for the entire portfolio
+  
+  <Expandable title="net_greeks">
+    <ResponseField name="delta" type="float">
+      Net delta - Directional exposure (positive = bullish, negative = bearish)
+    </ResponseField>
+    
+    <ResponseField name="gamma" type="float">
+      Net gamma - Acceleration of delta. Negative gamma increases volatility risk.
+    </ResponseField>
+    
+    <ResponseField name="theta" type="float">
+      Net theta - Daily time decay (positive = earning premium, negative = losing premium)
+    </ResponseField>
+    
+    <ResponseField name="vega" type="float">
+      Net vega - Sensitivity to volatility changes
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="quick_tips" type="array">
+  Array of actionable insights and warnings based on Greeks analysis
+</ResponseField>
+
+<ResponseField name="llm_analysis" type="string" default={null}>
+  Always `null` for this endpoint (LLM not called)
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "risk_score": 7,
+  "net_greeks": {
+    "delta": -65.50,
+    "gamma": -8.20,
+    "theta": 12.40,
+    "vega": -22.10
+  },
+  "quick_tips": [
+    "Ingresas $12.4/dia por primas desgastadas (Theta positiva).",
+    "Cartera apalancada: Bajista (Delta -65.5).",
+    "ALERTA: Gamma negativo severo (Riesgo agudo de volatilidad)."
+  ],
+  "llm_analysis": null
+}
+```
+
+### Risk Scoring Logic
+
+<Info>
+The risk score is calculated based on:
+- **Theta < -20**: +2 risk (losing premium rapidly)
+- **Theta > 20**: -1 risk (collecting premium)
+- **|Delta| > 50**: +1 risk (high directional exposure)
+- **Gamma < -10**: +3 risk (severe volatility risk)
+</Info>
+
+---
+
+## AI Strategy Insights (LLM)
+
+<RequestExample>
+```bash cURL
+curl -X POST http://localhost:8000/api/ai/insights \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_price": 175.43,
+    "ticker": "AAPL",
+    "volatility_shock": 0.0,
+    "legs": [
+      {
+        "type": "put",
+        "action": "sell",
+        "strike": 170.0,
+        "expiration": "2024-12-20",
+        "qty": 1,
+        "premium": 2.50
+      },
+      {
+        "type": "put",
+        "action": "buy",
+        "strike": 165.0,
+        "expiration": "2024-12-20",
+        "qty": 1,
+        "premium": 1.00
+      }
+    ]
+  }'
+```
+
+```python Python
+import requests
+
+payload = {
+    "underlying_price": 175.43,
+    "ticker": "AAPL",
+    "volatility_shock": 0.0,
+    "legs": [
+        {
+            "type": "put",
+            "action": "sell",
+            "strike": 170.0,
+            "expiration": "2024-12-20",
+            "qty": 1,
+            "premium": 2.50
+        },
+        {
+            "type": "put",
+            "action": "buy",
+            "strike": 165.0,
+            "expiration": "2024-12-20",
+            "qty": 1,
+            "premium": 1.00
+        }
+    ]
+}
+
+response = requests.post(
+    "http://localhost:8000/api/ai/insights",
+    json=payload
+)
+insights = response.json()
+print(insights['llm_analysis'])
+```
+</RequestExample>
+
+### Request Body
+
+Same as `/greeks` endpoint - accepts a `StrategyState` object.
+
+### Response
+
+<ResponseField name="risk_score" type="integer">
+  Risk score from 1-10
+</ResponseField>
+
+<ResponseField name="net_greeks" type="object">
+  Net Greeks for the portfolio (same as `/greeks`)
+</ResponseField>
+
+<ResponseField name="quick_tips" type="array">
+  Array of quick insights
+</ResponseField>
+
+<ResponseField name="llm_analysis" type="string">
+  **Comprehensive AI analysis** including:
+  - Strategy identification
+  - Risk assessment and scenarios
+  - Greeks interpretation
+  - Market condition recommendations
+  - Exit strategy suggestions
+  - Potential adjustments
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "risk_score": 5,
+  "net_greeks": {
+    "delta": -15.20,
+    "gamma": 3.40,
+    "theta": 8.50,
+    "vega": -5.20
+  },
+  "quick_tips": [
+    "Ingresas $8.5/dia por primas desgastadas (Theta positiva)."
+  ],
+  "llm_analysis": "You have constructed a Bull Put Spread on AAPL, a defined-risk bullish strategy.\n\n**Risk Profile**: Your max profit is $150 (premium collected), and max loss is $350 if AAPL drops below $165.\n\n**Greeks Analysis**:\n- Positive Theta ($8.50/day) means time decay works in your favor\n- Small negative Delta (-15.20) shows mild bearish exposure if stock drops\n- Positive Gamma provides some cushion as price moves\n\n**Current Market**: At $175.43, AAPL is trading well above your short strike of $170, giving you a comfortable margin.\n\n**Recommendations**:\n- Consider closing at 50% profit to reduce risk\n- Watch support at $172 - breach could accelerate losses\n- If AAPL rallies further, consider letting theta work for you\n- Exit immediately if AAPL drops below $170\n\n**Best Scenario**: AAPL stays above $170 through expiration - you keep full $150 credit."
+}
+```
+
+### Error Response
+
+```json
+{
+  "risk_score": 1,
+  "net_greeks": {
+    "delta": 0,
+    "gamma": 0,
+    "theta": 0,
+    "vega": 0
+  },
+  "quick_tips": ["No pudimos procesar tus griegas."],
+  "llm_analysis": "Error en el Agente Evaluador."
+}
+```
+
+## When to Use Each Endpoint
+
+<CardGroup cols={2}>
+  <Card title="/greeks (Fast)" icon="bolt">
+    - Real-time updates while building strategy
+    - Frequent recalculations
+    - Dashboard displays
+    - Risk monitoring
+  </Card>
+  
+  <Card title="/insights (LLM)" icon="brain">
+    - Final strategy review
+    - Before placing trades
+    - Educational explanations
+    - Detailed risk analysis
+  </Card>
+</CardGroup>
+
+## Implementation Notes
+
+<Info>
+**Greeks Calculation**: Net Greeks are computed by:
+1. Calculating individual Greeks for each leg using Black-Scholes
+2. Multiplying by quantity × 100 (contract multiplier)
+3. Negating if leg is sold
+4. Summing across all legs
+</Info>
+
+<Warning>
+**LLM Performance**: The `/insights` endpoint may take 2-5 seconds due to LLM processing. Use `/greeks` for real-time updates.
+</Warning>
+
+## Use Cases
+
+- **Portfolio Monitoring**: Track net Greeks in real-time
+- **Risk Alerts**: Get warnings on dangerous Greek exposures
+- **Educational**: Learn how your strategy behaves (LLM)
+- **Pre-Trade Analysis**: Validate strategy before execution
+- **Position Management**: Identify when to adjust or exit

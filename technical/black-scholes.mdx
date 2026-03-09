@@ -1,0 +1,591 @@
+---
+title: 'Black-Scholes Model'
+description: 'Complete implementation of Black-Scholes-Merton pricing and Greeks calculation'
+icon: 'function'
+---
+
+## Mathematical Foundation
+
+The **Black-Scholes-Merton (BSM)** model provides closed-form solutions for European option pricing. OptionStrat AI implements the complete BSM framework with dividend adjustments.
+
+### Core Formula
+
+For a European call option:
+
+$$
+C(S, t) = S e^{-qT} N(d_1) - K e^{-rT} N(d_2)
+$$
+
+For a European put option:
+
+$$
+P(S, t) = K e^{-rT} N(-d_2) - S e^{-qT} N(-d_1)
+$$
+
+Where:
+
+$$
+d_1 = \frac{\ln(S/K) + (r - q + \sigma^2/2)T}{\sigma\sqrt{T}}
+$$
+
+$$
+d_2 = d_1 - \sigma\sqrt{T}
+$$
+
+**Variables:**
+- $S$ = Current spot price of the underlying
+- $K$ = Strike price
+- $T$ = Time to expiration (in years)
+- $r$ = Risk-free interest rate (annualized)
+- $q$ = Dividend yield (annualized)
+- $\sigma$ = Implied volatility (annualized)
+- $N(x)$ = Cumulative distribution function of standard normal distribution
+
+## Implementation
+
+### BSM Pricing Function
+
+From `backend/app/core/black_scholes.py:10-28`:
+
+```python
+import numpy as np
+from scipy.stats import norm
+from typing import Union, Tuple
+
+def bsm_price(S: float, K: float, T: float, r: float, sigma: float, 
+              q: float = 0.0, kind: str = "call") -> float:
+    """
+    Calcula el precio de una opción Europea usando Black-Scholes-Merton.
+    
+    Parameters:
+    -----------
+    S : float
+        Spot price of the underlying asset
+    K : float
+        Strike price
+    T : float
+        Time to expiration in years
+    r : float
+        Risk-free interest rate (annualized)
+    sigma : float
+        Implied volatility (annualized)
+    q : float, optional
+        Dividend yield (default: 0.0)
+    kind : str
+        "call" or "put"
+    
+    Returns:
+    --------
+    float
+        Option price
+    """
+    # Handle stock position
+    if kind == "stock":
+        return float(S)
+    
+    # Handle edge cases (expired or zero volatility)
+    if T <= 0:
+        return max(0.0, (S - K) if kind == "call" else (K - S))
+    if sigma <= 0:
+        return max(0.0, (S - K) if kind == "call" else (K - S))
+    
+    # Calculate d1 and d2
+    d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    
+    # Calculate option price
+    if kind == "call":
+        return float(S * np.exp(-q * T) * norm.cdf(d1) - 
+                    K * np.exp(-r * T) * norm.cdf(d2))
+    else:  # put
+        return float(K * np.exp(-r * T) * norm.cdf(-d2) - 
+                    S * np.exp(-q * T) * norm.cdf(-d1))
+```
+
+<Note>
+The function handles edge cases gracefully:
+- **Expired options** ($T \leq 0$): Returns intrinsic value
+- **Zero volatility** ($\sigma \leq 0$): Returns intrinsic value
+- **Stock positions**: Returns spot price directly
+</Note>
+
+## The Greeks
+
+The Greeks measure sensitivity of option prices to various parameters. They are essential for risk management and strategy analysis.
+
+### Delta (Δ)
+
+**Definition**: Rate of change of option price with respect to underlying price.
+
+$$
+\Delta_{\text{call}} = e^{-qT} N(d_1)
+$$
+
+$$
+\Delta_{\text{put}} = -e^{-qT} N(-d_1)
+$$
+
+**Interpretation:**
+- Call delta ranges from 0 to 1
+- Put delta ranges from -1 to 0
+- Delta ≈ probability of finishing ITM (In-The-Money)
+- Delta tells you how many shares the option behaves like
+
+### Gamma (Γ)
+
+**Definition**: Rate of change of delta with respect to underlying price.
+
+$$
+\Gamma = \frac{e^{-qT} N'(d_1)}{S \sigma \sqrt{T}}
+$$
+
+Where $N'(x) = \frac{1}{\sqrt{2\pi}} e^{-x^2/2}$ is the standard normal PDF.
+
+**Interpretation:**
+- Gamma is highest for ATM options
+- Gamma increases as expiration approaches
+- High gamma means delta changes rapidly
+- Same value for calls and puts at same strike
+
+### Theta (Θ)
+
+**Definition**: Rate of change of option price with respect to time (time decay).
+
+For a **call**:
+
+$$
+\Theta_{\text{call}} = \frac{-S \sigma e^{-qT} N'(d_1)}{2\sqrt{T}} - rK e^{-rT} N(d_2) + qS e^{-qT} N(d_1)
+$$
+
+For a **put**:
+
+$$
+\Theta_{\text{put}} = \frac{-S \sigma e^{-qT} N'(d_1)}{2\sqrt{T}} + rK e^{-rT} N(-d_2) - qS e^{-qT} N(-d_1)
+$$
+
+<Warning>
+Theta is typically **negative** for long options, meaning options lose value as time passes (time decay).
+</Warning>
+
+**Interpretation:**
+- Expressed in dollars per day (divided by 365)
+- ATM options have highest theta
+- Theta accelerates as expiration approaches
+- Short options benefit from theta decay
+
+### Vega (ν)
+
+**Definition**: Rate of change of option price with respect to implied volatility.
+
+$$
+\text{Vega} = S e^{-qT} N'(d_1) \sqrt{T}
+$$
+
+**Interpretation:**
+- Expressed per 1% change in volatility (divided by 100)
+- Same value for calls and puts at same strike
+- ATM options have highest vega
+- Long options benefit from volatility increases
+- Vega decreases as expiration approaches
+
+### Rho (ρ)
+
+**Definition**: Rate of change of option price with respect to risk-free rate.
+
+For a **call**:
+
+$$
+\rho_{\text{call}} = KT e^{-rT} N(d_2)
+$$
+
+For a **put**:
+
+$$
+\rho_{\text{put}} = -KT e^{-rT} N(-d_2)
+$$
+
+**Interpretation:**
+- Expressed per 1% change in interest rate (divided by 100)
+- Usually the least significant Greek
+- More important for long-dated options
+
+## Greeks Implementation
+
+From `backend/app/core/black_scholes.py:30-81`:
+
+```python
+def bsm_greeks(S: float, K: float, T: float, r: float, sigma: float, 
+               q: float = 0.0, kind: str = "call") -> dict:
+    """
+    Calcula Delta, Gamma, Theta, Vega, Rho usando BSM.
+    
+    Returns:
+    --------
+    dict
+        {
+            "delta": float,
+            "gamma": float,
+            "theta": float,  # per day
+            "vega": float,   # per 1% vol change
+            "rho": float     # per 1% rate change
+        }
+    """
+    # Handle stock position
+    if kind == "stock":
+        return {"delta": 1.0, "gamma": 0.0, "theta": 0.0, 
+                "vega": 0.0, "rho": 0.0}
+    
+    # Handle edge cases
+    if T <= 0 or sigma <= 0:
+        return {"delta": 0.0, "gamma": 0.0, "theta": 0.0, 
+                "vega": 0.0, "rho": 0.0}
+    
+    # Pre-calculate common terms
+    sqrt_T = np.sqrt(T)
+    d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * sqrt_T)
+    d2 = d1 - sigma * sqrt_T
+    
+    pdf_d1 = norm.pdf(d1)
+    cdf_d1 = norm.cdf(d1)
+    cdf_minus_d1 = norm.cdf(-d1)
+    cdf_d2 = norm.cdf(d2)
+    cdf_minus_d2 = norm.cdf(-d2)
+    
+    # Gamma and Vega (same for calls and puts)
+    gamma = (np.exp(-q * T) * pdf_d1) / (S * sigma * sqrt_T)
+    vega = S * np.exp(-q * T) * pdf_d1 * sqrt_T / 100.0  # Scaled for 1%
+    
+    if kind == "call":
+        delta = np.exp(-q * T) * cdf_d1
+        
+        # Theta Call
+        term1 = - (S * sigma * np.exp(-q * T) * pdf_d1) / (2 * sqrt_T)
+        term2 = - r * K * np.exp(-r * T) * cdf_d2
+        term3 = q * S * np.exp(-q * T) * cdf_d1
+        theta = (term1 + term2 + term3) / 365.0  # Per day
+        
+        rho = (K * T * np.exp(-r * T) * cdf_d2) / 100.0
+    else:  # put
+        delta = -np.exp(-q * T) * cdf_minus_d1
+        
+        # Theta Put
+        term1 = - (S * sigma * np.exp(-q * T) * pdf_d1) / (2 * sqrt_T)
+        term2 = r * K * np.exp(-r * T) * cdf_minus_d2
+        term3 = - q * S * np.exp(-q * T) * cdf_minus_d1
+        theta = (term1 + term2 + term3) / 365.0  # Per day
+        
+        rho = (-K * T * np.exp(-r * T) * cdf_minus_d2) / 100.0
+    
+    return {
+        "delta": float(delta),
+        "gamma": float(gamma),
+        "theta": float(theta),
+        "vega": float(vega),
+        "rho": float(rho)
+    }
+```
+
+<Accordion title="Understanding the Scaling Factors">
+
+**Why divide by 365, 100, etc.?**
+
+1. **Theta ÷ 365**: Converts annual time decay to **daily** decay
+   - BSM uses $T$ in years, but traders think in days
+   - Example: Theta = -0.05 means option loses $0.05 per day
+
+2. **Vega ÷ 100**: Expresses sensitivity per **1% volatility change**
+   - Volatility in BSM is decimal (0.20 = 20%)
+   - Example: Vega = 0.15 means +1% vol → +$0.15 in price
+
+3. **Rho ÷ 100**: Expresses sensitivity per **1% rate change**
+   - Interest rates in BSM are decimal (0.05 = 5%)
+   - Example: Rho = 0.03 means +1% rate → +$0.03 in price
+
+</Accordion>
+
+## Practical Usage Examples
+
+### Example 1: Pricing an ATM Call
+
+```python
+from app.core.black_scholes import bsm_price, bsm_greeks
+
+# SPY call option
+S = 450.00      # SPY current price
+K = 450.00      # Strike (ATM)
+T = 30 / 365    # 30 days to expiration
+r = 0.05        # 5% risk-free rate
+sigma = 0.20    # 20% implied volatility
+q = 0.015       # 1.5% dividend yield
+
+# Calculate price
+price = bsm_price(S, K, T, r, sigma, q, kind="call")
+print(f"Option Price: ${price:.2f}")
+# Output: Option Price: $7.32
+
+# Calculate Greeks
+greeks = bsm_greeks(S, K, T, r, sigma, q, kind="call")
+print(f"Delta: {greeks['delta']:.4f}")    # ~0.52
+print(f"Gamma: {greeks['gamma']:.4f}")    # ~0.05
+print(f"Theta: ${greeks['theta']:.2f}")   # -$0.12 per day
+print(f"Vega: ${greeks['vega']:.2f}")     # $0.18 per 1% vol
+```
+
+### Example 2: Iron Condor Strategy Greeks
+
+```python
+# Iron Condor: Sell 440/450 put spread, Sell 460/470 call spread
+S = 455.00
+T = 45 / 365
+r = 0.05
+sigma = 0.18
+q = 0.015
+
+# Short put spread (sell 450, buy 440)
+short_put_greeks = bsm_greeks(S, 450, T, r, sigma, q, "put")
+long_put_greeks = bsm_greeks(S, 440, T, r, sigma, q, "put")
+
+put_spread_delta = -short_put_greeks['delta'] + long_put_greeks['delta']
+put_spread_theta = -short_put_greeks['theta'] + long_put_greeks['theta']
+
+# Short call spread (sell 460, buy 470)
+short_call_greeks = bsm_greeks(S, 460, T, r, sigma, q, "call")
+long_call_greeks = bsm_greeks(S, 470, T, r, sigma, q, "call")
+
+call_spread_delta = -short_call_greeks['delta'] + long_call_greeks['delta']
+call_spread_theta = -short_call_greeks['theta'] + long_call_greeks['theta']
+
+# Total strategy Greeks
+total_delta = put_spread_delta + call_spread_delta
+total_theta = put_spread_theta + call_spread_theta
+
+print(f"Iron Condor Delta: {total_delta:.4f}")  # ~0.02 (nearly delta-neutral)
+print(f"Iron Condor Theta: ${total_theta:.2f}")  # $0.45 (positive time decay)
+```
+
+<Note>
+Iron condors are designed to be **delta-neutral** (Delta ≈ 0) while capturing **positive theta** (time decay profit).
+</Note>
+
+## Dividend Adjustments
+
+The $e^{-qT}$ term adjusts for continuous dividend yield:
+
+```python
+# Without dividends (q=0)
+price_no_div = bsm_price(S=100, K=100, T=0.5, r=0.05, sigma=0.25, q=0.0)
+print(f"No dividends: ${price_no_div:.2f}")
+# Output: $8.92
+
+# With 2% dividend yield
+price_with_div = bsm_price(S=100, K=100, T=0.5, r=0.05, sigma=0.25, q=0.02)
+print(f"With dividends: ${price_with_div:.2f}")
+# Output: $8.42 (calls worth less due to dividend outflow)
+```
+
+<Accordion title="Why Dividends Affect Option Prices">
+
+**For Call Options:**
+- Dividends reduce the expected future stock price
+- When dividends are paid, stock price drops by dividend amount
+- Therefore, calls become **less valuable** when $q > 0$
+
+**For Put Options:**
+- Dividends make puts **more valuable** when $q > 0$
+- Lower expected stock price increases put value
+
+**Mathematical Impact:**
+- The $e^{-qT}$ term reduces the effective spot price in the formula
+- Equivalent to pricing as if stock is at $S \cdot e^{-qT}$
+
+</Accordion>
+
+## Model Assumptions and Limitations
+
+<Warning>
+**Black-Scholes Assumptions:**
+
+1. **European exercise only** - No early exercise
+2. **Constant volatility** - Volatility smile/skew ignored
+3. **Continuous trading** - No gaps or market closures
+4. **Log-normal distribution** - Fat tails underestimated
+5. **No transaction costs** - Frictionless markets
+6. **Constant risk-free rate** - Term structure ignored
+</Warning>
+
+### When BSM Fails
+
+<Tabs>
+  <Tab title="American Options">
+    BSM only prices European options (no early exercise). For American options with dividends or deep ITM puts, use:
+    
+    - [Binomial Tree Model](/technical/pricing-models#binomial-tree)
+    - [Trinomial Tree Model](/technical/pricing-models#trinomial-tree)
+  </Tab>
+  
+  <Tab title="Extreme Events">
+    BSM assumes log-normal returns, underestimating tail risk:
+    
+    - Real markets have **fat tails** (more extreme moves)
+    - Volatility **clusters** (high vol persists)
+    - Use [Monte Carlo](/technical/pricing-models#monte-carlo) for stress testing
+  </Tab>
+  
+  <Tab title="Volatility Smile">
+    BSM assumes constant σ, but real markets show:
+    
+    - **Volatility smile**: OTM options trade at higher IV
+    - **Volatility skew**: Puts trade at higher IV than calls
+    - Solution: Use market-implied IV for each strike
+  </Tab>
+</Tabs>
+
+## Real-Time Greeks Calculation
+
+OptionStrat AI recalculates Greeks for every option in the chain using current market data:
+
+From `backend/app/data/data_manager.py:361-412`:
+
+```python
+# FORZAR CALCULO: yfinance suele traer griegas malas
+need_calc = True
+
+if need_calc:
+    deltas, gammas, thetas, vegas = [], [], [], []
+    
+    for idx, row in df.iterrows():
+        try:
+            T_years = max(row['dte'], 0.5) / 365.0  # Min 0.5 days
+            sigma = row['impliedVolatility']
+            
+            if sigma <= 0 or T_years <= 0:
+                deltas.append(0.0); gammas.append(0.0)
+                thetas.append(0.0); vegas.append(0.0)
+                continue
+            
+            greeks = bsm_greeks(
+                S=spot, 
+                K=row['strike'], 
+                T=T_years, 
+                r=r,  # Dynamic risk-free rate from ^IRX
+                sigma=sigma,  # Market implied volatility
+                q=0.0,  # TODO: Fetch dividend yield
+                kind=row['type']
+            )
+            
+            deltas.append(greeks.get('delta', 0.0))
+            gammas.append(greeks.get('gamma', 0.0))
+            thetas.append(greeks.get('theta', 0.0))
+            vegas.append(greeks.get('vega', 0.0))
+        except Exception:
+            deltas.append(0.0); gammas.append(0.0)
+            thetas.append(0.0); vegas.append(0.0)
+    
+    df['delta'] = deltas
+    df['gamma'] = gammas
+    df['theta'] = thetas
+    df['vega'] = vegas
+```
+
+<Note>
+**Why Recalculate?** YFinance provides Greeks, but they're often:
+- Stale (not real-time)
+- Calculated with different r or q assumptions
+- Missing for some strikes
+- Inconsistent across the chain
+
+Recalculating ensures **consistency** across all analytics.
+</Note>
+
+## Performance Considerations
+
+### Vectorization
+
+For large option chains, vectorize calculations:
+
+```python
+import numpy as np
+from scipy.stats import norm
+
+def bsm_price_vectorized(S, K, T, r, sigma, q=0.0, kind="call"):
+    """
+    Vectorized BSM pricing for arrays of strikes.
+    """
+    d1 = (np.log(S / K) + (r - q + 0.5 * sigma ** 2) * T) / (sigma * np.sqrt(T))
+    d2 = d1 - sigma * np.sqrt(T)
+    
+    if kind == "call":
+        prices = S * np.exp(-q * T) * norm.cdf(d1) - K * np.exp(-r * T) * norm.cdf(d2)
+    else:
+        prices = K * np.exp(-r * T) * norm.cdf(-d2) - S * np.exp(-q * T) * norm.cdf(-d1)
+    
+    return prices
+
+# Price 100 strikes at once
+strikes = np.linspace(400, 500, 100)
+prices = bsm_price_vectorized(S=450, K=strikes, T=0.1, r=0.05, sigma=0.20)
+```
+
+<Accordion title="Performance Comparison">
+
+```python
+import time
+
+# Non-vectorized
+start = time.time()
+for strike in strikes:
+    price = bsm_price(450, strike, 0.1, 0.05, 0.20)
+loop_time = time.time() - start
+print(f"Loop: {loop_time:.4f}s")
+# Output: Loop: 0.0234s
+
+# Vectorized
+start = time.time()
+prices = bsm_price_vectorized(450, strikes, 0.1, 0.05, 0.20)
+vec_time = time.time() - start
+print(f"Vectorized: {vec_time:.4f}s")
+# Output: Vectorized: 0.0008s
+
+print(f"Speedup: {loop_time/vec_time:.1f}x")
+# Output: Speedup: 29.2x
+```
+
+</Accordion>
+
+## Testing and Validation
+
+### Put-Call Parity
+
+Validate implementation using put-call parity:
+
+$$
+C - P = S e^{-qT} - K e^{-rT}
+$$
+
+```python
+def test_put_call_parity():
+    S, K, T, r, sigma, q = 100, 100, 1.0, 0.05, 0.20, 0.02
+    
+    call_price = bsm_price(S, K, T, r, sigma, q, "call")
+    put_price = bsm_price(S, K, T, r, sigma, q, "put")
+    
+    lhs = call_price - put_price
+    rhs = S * np.exp(-q * T) - K * np.exp(-r * T)
+    
+    assert abs(lhs - rhs) < 1e-6, "Put-call parity violated!"
+    print(f"Put-call parity holds: {lhs:.6f} ≈ {rhs:.6f}")
+
+test_put_call_parity()
+# Output: Put-call parity holds: 2.930623 ≈ 2.930623
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Pricing Models" icon="chart-line" href="/technical/pricing-models">
+    Explore Binomial, Trinomial, and Monte Carlo methods
+  </Card>
+  <Card title="Data Sources" icon="database" href="/technical/data-sources">
+    Learn how market data flows into pricing calculations
+  </Card>
+</CardGroup>

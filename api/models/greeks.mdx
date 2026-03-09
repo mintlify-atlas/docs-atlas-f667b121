@@ -1,0 +1,321 @@
+---
+title: 'Greeks'
+description: 'Portfolio risk metrics for options strategies'
+---
+
+## Overview
+
+Greeks are risk measures that describe how an option's price changes in response to various factors. The OptionStrat AI API calculates net portfolio Greeks by aggregating all option legs in a strategy, giving you a complete view of your position's risk profile.
+
+Greeks are returned by the `/api/ai/greeks` and `/api/ai/insights` endpoints as part of the response.
+
+## Greeks Response Model
+
+When you call the Greeks endpoints, you receive a response containing:
+
+```json
+{
+  "risk_score": 5,
+  "net_greeks": {
+    "delta": 25.50,
+    "gamma": 0.15,
+    "theta": -12.30,
+    "vega": 18.75
+  },
+  "quick_tips": [
+    "Posicion neutral. Las griegas estan estabilizadas."
+  ],
+  "llm_analysis": "Optional AI-generated analysis..."
+}
+```
+
+## Greek Metrics Explained
+
+<ResponseField name="delta" type="float">
+  **Delta** measures the rate of change in option price relative to a $1 change in the underlying asset price.
+  
+  ### Interpretation:
+  - **Positive Delta:** Bullish position - profits when underlying goes up
+    - `+25.50` means the position gains $25.50 for every $1 increase in underlying
+  - **Negative Delta:** Bearish position - profits when underlying goes down
+    - `-40.00` means the position loses $40 for every $1 increase in underlying
+  - **Near Zero:** Delta-neutral - relatively insensitive to price movement
+  
+  ### Risk Alerts:
+  - `|delta| > 50`: Highly directional position (leveraged exposure)
+  - `|delta| < 10`: Near market-neutral
+  
+  ### Examples:
+  - **Long 1 Call (ATM):** Delta ≈ +50 (0.50 × 100)
+  - **Short 2 Puts (OTM):** Delta ≈ -60 (2 × -0.30 × 100)
+  - **Iron Condor:** Delta ≈ 0 (balanced structure)
+</ResponseField>
+
+<ResponseField name="gamma" type="float">
+  **Gamma** measures the rate of change in delta relative to a $1 change in the underlying asset price.
+  
+  ### Interpretation:
+  - **Positive Gamma:** Delta increases as underlying rises (long options)
+    - `+0.15` means delta increases by 0.15 for every $1 move in underlying
+  - **Negative Gamma:** Delta decreases as underlying rises (short options)
+    - `-0.25` means delta decreases by 0.25 for every $1 move in underlying
+  
+  ### Risk Alerts:
+  - `gamma < -10`: Severe negative gamma - high volatility risk
+  - High negative gamma means your position becomes increasingly worse as the market moves against you
+  
+  ### Examples:
+  - **Long Straddle:** High positive gamma (benefits from large moves)
+  - **Short Iron Condor:** Negative gamma (hurt by large moves)
+  - **Covered Call:** Negative gamma (short call component)
+</ResponseField>
+
+<ResponseField name="theta" type="float">
+  **Theta** measures the rate of time decay - how much value the position loses or gains per day.
+  
+  ### Interpretation:
+  - **Negative Theta:** Position loses value each day (time decay works against you)
+    - `-12.30` means you lose $12.30 per day due to time decay
+  - **Positive Theta:** Position gains value each day (time decay works for you)
+    - `+25.00` means you gain $25 per day from premium decay
+  
+  ### Risk Alerts:
+  - `theta < -20`: Accelerated time decay - losing significant value daily
+  - `theta > 20`: Collecting significant premium daily
+  
+  ### Examples:
+  - **Long Call/Put:** Negative theta (buying premium = losing to decay)
+  - **Short Call/Put:** Positive theta (selling premium = profiting from decay)
+  - **Iron Condor:** Positive theta (net credit strategy)
+  - **Calendar Spread:** Near-zero or positive theta (engineered for time decay)
+  
+  ### Time Decay Acceleration:
+  Theta accelerates as expiration approaches, especially in the last 30 days.
+</ResponseField>
+
+<ResponseField name="vega" type="float">
+  **Vega** measures sensitivity to changes in implied volatility (IV).
+  
+  ### Interpretation:
+  - **Positive Vega:** Position profits from volatility increase
+    - `+18.75` means position gains $18.75 for every 1% increase in IV
+  - **Negative Vega:** Position profits from volatility decrease
+    - `-22.50` means position loses $22.50 for every 1% increase in IV
+  
+  ### Examples:
+  - **Long Straddle/Strangle:** High positive vega (want vol expansion)
+  - **Short Iron Condor:** Negative vega (want vol contraction)
+  - **Long Call/Put:** Positive vega (benefits from vol increase)
+  - **Short Call/Put:** Negative vega (benefits from vol decrease)
+  
+  ### Volatility Context:
+  - High IV environment → Consider selling premium (negative vega)
+  - Low IV environment → Consider buying premium (positive vega)
+</ResponseField>
+
+## Complete Response Structure
+
+<ParamField path="risk_score" type="integer">
+  Overall risk score from 1 (lowest risk) to 10 (highest risk).
+  
+  Calculated based on:
+  - Magnitude of delta (directional exposure)
+  - Negative gamma (volatility risk)
+  - Accelerated theta decay
+  - Extreme vega exposure
+  
+  **Score Ranges:**
+  - 1-3: Low risk (well-balanced, defined risk)
+  - 4-6: Moderate risk (some directional bias)
+  - 7-10: High risk (leveraged, undefined risk, or extreme exposure)
+</ParamField>
+
+<ParamField path="net_greeks" type="object">
+  Net portfolio Greeks aggregated across all legs.
+  
+  <Expandable title="properties">
+    <ResponseField name="delta" type="float">
+      Net delta exposure
+    </ResponseField>
+    
+    <ResponseField name="gamma" type="float">
+      Net gamma exposure
+    </ResponseField>
+    
+    <ResponseField name="theta" type="float">
+      Net theta (time decay per day)
+    </ResponseField>
+    
+    <ResponseField name="vega" type="float">
+      Net vega (IV sensitivity)
+    </ResponseField>
+  </Expandable>
+</ParamField>
+
+<ParamField path="quick_tips" type="string[]">
+  Array of actionable insights about the position's risk profile.
+  
+  **Examples:**
+  - "ALERTA: Riesgo de Theta acelerado. Pierdes $12.30/dia."
+  - "Cartera apalancada: Alcista (Delta 65.50)."
+  - "ALERTA: Gamma negativo severo (Riesgo agudo de volatilidad)."
+  - "Ingresas $25.00/dia por primas desgastadas (Theta positiva)."
+</ParamField>
+
+<ParamField path="llm_analysis" type="string" optional>
+  AI-generated analysis of the strategy (only in `/api/ai/insights` endpoint).
+  
+  Will be `null` in the fast `/api/ai/greeks` endpoint.
+</ParamField>
+
+## Example API Call
+
+```bash
+curl -X POST https://api.optionstrat.ai/api/ai/greeks \
+  -H "Content-Type: application/json" \
+  -d '{
+    "underlying_price": 150.00,
+    "ticker": "AAPL",
+    "volatility_shock": 0.0,
+    "legs": [
+      {
+        "type": "call",
+        "action": "buy",
+        "strike": 155.0,
+        "expiration": "2026-04-17",
+        "qty": 1,
+        "premium": 3.50
+      },
+      {
+        "type": "call",
+        "action": "sell",
+        "strike": 160.0,
+        "expiration": "2026-04-17",
+        "qty": 1,
+        "premium": 1.80
+      }
+    ]
+  }'
+```
+
+**Response:**
+
+```json
+{
+  "risk_score": 4,
+  "net_greeks": {
+    "delta": 32.50,
+    "gamma": 0.08,
+    "theta": -8.50,
+    "vega": 12.30
+  },
+  "quick_tips": [
+    "Cartera apalancada: Alcista (Delta 32.50)."
+  ],
+  "llm_analysis": null
+}
+```
+
+## Strategy Examples with Greeks
+
+### Bull Call Spread
+
+```json
+{
+  "risk_score": 4,
+  "net_greeks": {
+    "delta": 35.00,
+    "gamma": 0.05,
+    "theta": -5.20,
+    "vega": 8.50
+  },
+  "quick_tips": [
+    "Cartera apalancada: Alcista (Delta 35.00)."
+  ]
+}
+```
+
+**Analysis:**
+- Bullish position (positive delta)
+- Moderate directional bias
+- Small daily time decay
+- Benefits from volatility increase
+
+### Iron Condor
+
+```json
+{
+  "risk_score": 5,
+  "net_greeks": {
+    "delta": 2.50,
+    "gamma": -0.18,
+    "theta": 28.50,
+    "vega": -15.20
+  },
+  "quick_tips": [
+    "Ingresas $28.50/dia por primas desgastadas (Theta positiva).",
+    "ALERTA: Gamma negativo severo (Riesgo agudo de volatilidad)."
+  ]
+}
+```
+
+**Analysis:**
+- Near delta-neutral (slight directional bias)
+- Negative gamma (volatility risk)
+- Collecting premium daily (positive theta)
+- Benefits from volatility contraction
+
+### Long Straddle
+
+```json
+{
+  "risk_score": 6,
+  "net_greeks": {
+    "delta": 0.50,
+    "gamma": 0.25,
+    "theta": -45.80,
+    "vega": 65.30
+  },
+  "quick_tips": [
+    "ALERTA: Riesgo de Theta acelerado. Pierdes $45.80/dia."
+  ]
+}
+```
+
+**Analysis:**
+- Delta-neutral (profits from any large move)
+- Positive gamma (accelerating profits with movement)
+- High negative theta (expensive hold)
+- High positive vega (needs volatility expansion)
+
+## Calculation Method
+
+The API uses the **Black-Scholes-Merton model** to calculate Greeks for each individual leg, then aggregates them:
+
+1. For each leg:
+   - Calculate individual Greeks using BSM
+   - Apply multiplier: `qty × 100` (for options)
+   - Invert sign if action is "sell"
+
+2. Sum across all legs:
+   ```
+   net_delta = sum(leg.delta × leg.multiplier)
+   net_gamma = sum(leg.gamma × leg.multiplier)
+   net_theta = sum(leg.theta × leg.multiplier)
+   net_vega = sum(leg.vega × leg.multiplier)
+   ```
+
+3. Apply volatility shock if specified:
+   ```
+   adjusted_vol = base_vol × (1 + volatility_shock)
+   ```
+
+## Related Models
+
+- [StrategyState](/api/models/strategy-state) - Input model containing strategy definition
+- [OptionLeg](/api/models/option-leg) - Individual positions that make up the strategy
+
+## Related Endpoints
+
+- `POST /api/ai/greeks` - Fast Greeks calculation (no LLM)
+- `POST /api/ai/insights` - Complete analysis with AI insights

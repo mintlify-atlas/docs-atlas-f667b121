@@ -1,0 +1,427 @@
+---
+title: 'Recommender'
+description: 'AI-powered strategy recommendations based on market bias'
+icon: 'lightbulb'
+---
+
+## Overview
+
+The Strategy Recommender endpoint analyzes real-time options chains and recommends statistically advantageous spread strategies based on your market bias and risk profile. It uses **Theta Gang methodology** to identify optimal trades.
+
+---
+
+## Get Strategy Recommendations
+
+<RequestExample>
+```bash cURL
+curl "http://localhost:8000/api/options/recommend/AAPL?bias=neutral&risk_profile=balanced&min_dte=30&max_dte=60"
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "http://localhost:8000/api/options/recommend/AAPL",
+    params={
+        "bias": "neutral",
+        "risk_profile": "balanced",
+        "min_dte": 30,
+        "max_dte": 60
+    }
+)
+recommendations = response.json()
+```
+</RequestExample>
+
+<ParamField path="ticker" type="string" required>
+  Stock ticker symbol (e.g., "AAPL", "SPY", "TSLA")
+</ParamField>
+
+<ParamField query="bias" type="string" default="neutral">
+  Market direction bias:
+  - `bullish` - Expect price to rise
+  - `neutral` - Expect price to stay range-bound
+  - `bearish` - Expect price to fall
+</ParamField>
+
+<ParamField query="risk_profile" type="string" default="balanced">
+  Risk tolerance affecting strategy selection:
+  - `conservative` - Higher probability of profit, lower credit
+  - `balanced` - Moderate risk/reward
+  - `aggressive` - Lower probability, higher credit potential
+</ParamField>
+
+<ParamField query="min_dte" type="integer" default={30}>
+  Minimum days to expiration for option legs. Must be >= 1.
+</ParamField>
+
+<ParamField query="max_dte" type="integer" default={60}>
+  Maximum days to expiration for option legs. Must be 180 or less.
+</ParamField>
+
+### Response
+
+<ResponseField name="status" type="string">
+  Status: `"success"` or `"error"`
+</ResponseField>
+
+<ResponseField name="ticker" type="string">
+  Ticker symbol in uppercase
+</ResponseField>
+
+<ResponseField name="bias" type="string">
+  The market bias used for recommendations
+</ResponseField>
+
+<ResponseField name="risk_profile" type="string">
+  The risk profile used
+</ResponseField>
+
+<ResponseField name="spot" type="float">
+  Current spot price of the underlying
+</ResponseField>
+
+<ResponseField name="analyzed_expirations" type="array">
+  List of expiration dates analyzed (typically one date for consistency)
+</ResponseField>
+
+<ResponseField name="recommendations" type="array">
+  Array of recommended strategy objects
+  
+  <Expandable title="Strategy object">
+    <ResponseField name="strategy_name" type="string">
+      Name of the strategy (e.g., "Bull Put Spread", "Iron Condor", "Credit Call Spread")
+    </ResponseField>
+    
+    <ResponseField name="strategy_type" type="string">
+      Category: `"credit"` or `"debit"`
+    </ResponseField>
+    
+    <ResponseField name="expected_credit" type="float">
+      Net premium collected (positive) or paid (negative)
+    </ResponseField>
+    
+    <ResponseField name="max_profit" type="float">
+      Maximum potential profit
+    </ResponseField>
+    
+    <ResponseField name="max_loss" type="float">
+      Maximum potential loss (negative value)
+    </ResponseField>
+    
+    <ResponseField name="probability_of_profit" type="float">
+      Estimated probability of profit (0-100%)
+    </ResponseField>
+    
+    <ResponseField name="break_even" type="float | array">
+      Break-even price(s). Single value for spreads, two values for condors/butterflies.
+    </ResponseField>
+    
+    <ResponseField name="risk_reward_ratio" type="float">
+      Ratio of max_loss to max_profit (risk/reward)
+    </ResponseField>
+    
+    <ResponseField name="legs" type="array">
+      Array of option legs that make up this strategy
+      
+      <Expandable title="Leg object">
+        <ResponseField name="type" type="string">
+          `"call"` or `"put"`
+        </ResponseField>
+        
+        <ResponseField name="action" type="string">
+          `"buy"` or `"sell"`
+        </ResponseField>
+        
+        <ResponseField name="strike" type="float">
+          Strike price
+        </ResponseField>
+        
+        <ResponseField name="expiration" type="string">
+          Expiration date (YYYY-MM-DD)
+        </ResponseField>
+        
+        <ResponseField name="premium" type="float">
+          Mid price (bid+ask)/2
+        </ResponseField>
+        
+        <ResponseField name="delta" type="float">
+          Delta of this leg
+        </ResponseField>
+        
+        <ResponseField name="theta" type="float">
+          Theta of this leg
+        </ResponseField>
+        
+        <ResponseField name="volume" type="integer">
+          Trading volume
+        </ResponseField>
+        
+        <ResponseField name="open_interest" type="integer">
+          Open interest
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="net_greeks" type="object">
+      Net Greeks for the entire strategy
+      
+      <Expandable title="net_greeks">
+        <ResponseField name="delta" type="float">
+          Net delta
+        </ResponseField>
+        
+        <ResponseField name="theta" type="float">
+          Net theta (daily time decay)
+        </ResponseField>
+        
+        <ResponseField name="gamma" type="float">
+          Net gamma
+        </ResponseField>
+        
+        <ResponseField name="vega" type="float">
+          Net vega
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="description" type="string">
+      Human-readable description of the strategy and when to use it
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "status": "success",
+  "ticker": "AAPL",
+  "bias": "neutral",
+  "risk_profile": "balanced",
+  "spot": 175.43,
+  "analyzed_expirations": ["2024-12-20"],
+  "recommendations": [
+    {
+      "strategy_name": "Iron Condor",
+      "strategy_type": "credit",
+      "expected_credit": 125.00,
+      "max_profit": 125.00,
+      "max_loss": -375.00,
+      "probability_of_profit": 68.5,
+      "break_even": [168.75, 181.25],
+      "risk_reward_ratio": 3.0,
+      "legs": [
+        {
+          "type": "put",
+          "action": "buy",
+          "strike": 165.0,
+          "expiration": "2024-12-20",
+          "premium": 0.95,
+          "delta": -0.12,
+          "theta": 0.08,
+          "volume": 450,
+          "open_interest": 1250
+        },
+        {
+          "type": "put",
+          "action": "sell",
+          "strike": 170.0,
+          "expiration": "2024-12-20",
+          "premium": 2.20,
+          "delta": -0.25,
+          "theta": 0.15,
+          "volume": 890,
+          "open_interest": 2100
+        },
+        {
+          "type": "call",
+          "action": "sell",
+          "strike": 180.0,
+          "expiration": "2024-12-20",
+          "premium": 2.30,
+          "delta": 0.28,
+          "theta": 0.16,
+          "volume": 1120,
+          "open_interest": 3400
+        },
+        {
+          "type": "call",
+          "action": "buy",
+          "strike": 185.0,
+          "expiration": "2024-12-20",
+          "premium": 1.05,
+          "delta": 0.15,
+          "theta": 0.09,
+          "volume": 650,
+          "open_interest": 1800
+        }
+      ],
+      "net_greeks": {
+        "delta": 1.20,
+        "theta": 9.50,
+        "gamma": -2.10,
+        "vega": -18.40
+      },
+      "description": "Iron Condor is a neutral strategy that profits from low volatility. Sell OTM put and call spreads to collect premium. Best when expecting the stock to stay within a range."
+    },
+    {
+      "strategy_name": "Short Strangle",
+      "strategy_type": "credit",
+      "expected_credit": 185.00,
+      "max_profit": 185.00,
+      "max_loss": -99999.0,
+      "probability_of_profit": 62.0,
+      "break_even": [168.15, 182.85],
+      "risk_reward_ratio": 999.0,
+      "legs": [
+        {
+          "type": "put",
+          "action": "sell",
+          "strike": 170.0,
+          "expiration": "2024-12-20",
+          "premium": 2.20,
+          "delta": -0.25,
+          "theta": 0.15,
+          "volume": 890,
+          "open_interest": 2100
+        },
+        {
+          "type": "call",
+          "action": "sell",
+          "strike": 180.0,
+          "expiration": "2024-12-20",
+          "premium": 2.30,
+          "delta": 0.28,
+          "theta": 0.16,
+          "volume": 1120,
+          "open_interest": 3400
+        }
+      ],
+      "net_greeks": {
+        "delta": 0.60,
+        "theta": 12.40,
+        "gamma": -5.80,
+        "vega": -28.20
+      },
+      "description": "Short Strangle profits from time decay and low volatility. Undefined risk - requires careful monitoring. Higher credit than Iron Condor but more risk."
+    }
+  ]
+}
+```
+
+## Strategy Types by Bias
+
+<Tabs>
+  <Tab title="Neutral">
+    Strategies recommended for `bias="neutral"`:
+    - **Iron Condor** - Defined risk, moderate credit
+    - **Short Strangle** - Undefined risk, higher credit
+    - **Iron Butterfly** - Tight profit zone, highest credit
+    - **Calendar Spread** - Volatility play
+  </Tab>
+  
+  <Tab title="Bullish">
+    Strategies recommended for `bias="bullish"`:
+    - **Bull Put Spread** - Credit spread below current price
+    - **Cash-Secured Put** - Collect premium, willing to own stock
+    - **Poor Man's Covered Call** - Debit spread (LEAPS + short call)
+    - **Call Debit Spread** - Limited risk directional play
+  </Tab>
+  
+  <Tab title="Bearish">
+    Strategies recommended for `bias="bearish"`:
+    - **Bear Call Spread** - Credit spread above current price
+    - **Covered Call** - If you own stock
+    - **Put Debit Spread** - Limited risk downside play
+    - **Short Call Spread** - Credit strategy
+  </Tab>
+</Tabs>
+
+## Liquidity Filtering
+
+The recommender only considers liquid options:
+
+<Info>
+**Minimum Liquidity Requirements**:
+- **Conservative/Balanced**: Open Interest >= 50, Volume >= 10
+- **Aggressive**: Open Interest >= 20, Volume >= 5
+
+Illiquid options are filtered out to ensure tradeable recommendations.
+</Info>
+
+## Error Responses
+
+<ResponseField name="400" type="error">
+  No price data or insufficient liquidity
+  ```json
+  {
+    "detail": "No se pudo recuperar precio Spot para XYZ"
+  }
+  ```
+  or
+  ```json
+  {
+    "detail": "No hay contratos con suficiente liquidez (OI >= 50 y Volumen >= 10) en la fecha 2024-12-20."
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="404" type="error">
+  No expirations found
+  ```json
+  {
+    "detail": "No se encontraron fechas de expiración"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="500" type="error">
+  Internal error during processing
+  ```json
+  {
+    "detail": "Error message"
+  }
+  ```
+</ResponseField>
+
+## Implementation Notes
+
+<Warning>
+**Expiration Consistency**: The recommender uses a **single expiration date** for all legs to ensure strategy integrity (e.g., Iron Condor requires all 4 legs to expire on the same date).
+</Warning>
+
+<Info>
+**DTE Fallback**: If no expirations fall within `min_dte` to `max_dte`, the recommender selects the expiration closest to 45 DTE (the "sweet spot" for theta decay).
+</Info>
+
+## Use Cases
+
+- **Strategy Discovery**: Find trades you might not have considered
+- **Backtesting Ideas**: Get structured strategies to backtest
+- **Education**: Learn different spread constructions
+- **Quick Setup**: Copy recommended legs directly into your strategy builder
+- **Risk-Adjusted Trading**: Match strategies to your risk tolerance
+
+## Example Workflows
+
+<Accordion title="Conservative Income Generation">
+```bash
+curl "http://localhost:8000/api/options/recommend/SPY?bias=neutral&risk_profile=conservative&min_dte=45&max_dte=60"
+```
+Get high-probability credit strategies for monthly income.
+</Accordion>
+
+<Accordion title="Aggressive Directional Play">
+```bash
+curl "http://localhost:8000/api/options/recommend/TSLA?bias=bullish&risk_profile=aggressive&min_dte=20&max_dte=40"
+```
+Get higher-credit bullish strategies with lower probability but bigger payoff.
+</Accordion>
+
+<Accordion title="Balanced Neutral Strategy">
+```bash
+curl "http://localhost:8000/api/options/recommend/AAPL?bias=neutral&risk_profile=balanced&min_dte=30&max_dte=50"
+```
+Get well-balanced Iron Condors and similar range-bound strategies.
+</Accordion>

@@ -1,0 +1,121 @@
+---
+title: 'API Overview'
+description: 'Introduction to OptionStrat AI REST API'
+icon: 'code'
+---
+
+## Introduction
+
+The OptionStrat AI API provides comprehensive endpoints for options trading analysis, strategy building, and AI-powered insights. All endpoints return JSON responses and follow RESTful conventions.
+
+## Base URL
+
+```
+http://your-api-domain.com/api
+```
+
+## Response Format
+
+All API responses follow a consistent JSON structure:
+
+```json
+{
+  "status": "success",
+  "data": { },
+  // endpoint-specific fields
+}
+```
+
+## Error Handling
+
+The API uses standard HTTP status codes:
+
+- `200` - Success
+- `400` - Bad Request (invalid parameters)
+- `404` - Resource Not Found
+- `500` - Internal Server Error
+
+Error responses include a descriptive message:
+
+```json
+{
+  "detail": "Error description"
+}
+```
+
+## API Categories
+
+<CardGroup cols={2}>
+  <Card title="Option Chains" icon="link" href="/api/option-chains">
+    Retrieve options chain data, expirations, and live pricing
+  </Card>
+  <Card title="Calculations" icon="calculator" href="/api/calculations">
+    Generate P&L heatmaps and strategy analysis
+  </Card>
+  <Card title="AI Insights" icon="brain" href="/api/ai-insights">
+    Greeks calculation and LLM-powered strategy analysis
+  </Card>
+  <Card title="Recommender" icon="lightbulb" href="/api/recommender">
+    Get AI-recommended strategies based on market bias
+  </Card>
+  <Card title="Market Data" icon="chart-line" href="/api/market-data">
+    Market context, sentiment analysis, and insider data
+  </Card>
+</CardGroup>
+
+## Rate Limits
+
+<Info>
+Rate limiting information will be added in future releases. For now, please be mindful of external API dependencies (Yahoo Finance).
+</Info>
+
+## Authentication
+
+<Note>
+Authentication is not currently required for API endpoints. This may change in production deployments.
+</Note>
+
+## Quick Start
+
+Here's a simple example to get started:
+
+```bash
+# Get available expirations for AAPL
+curl http://localhost:8000/api/options/expirations/AAPL
+
+# Get option chain for specific expiration
+curl "http://localhost:8000/api/options/chain/AAPL?expiration=2024-12-20"
+```
+
+## Data Sources
+
+The API integrates with multiple data providers:
+
+- **Yahoo Finance** - Options chains, pricing, and market data
+- **YahooQuery** - Insider trading information
+- **FinViz/VADER** - Sentiment analysis
+- **Black-Scholes Model** - Greeks calculations
+
+## Common Parameters
+
+<ResponseField name="ticker" type="string">
+  Stock ticker symbol (e.g., "AAPL", "TSLA")
+</ResponseField>
+
+<ResponseField name="expiration" type="string">
+  Option expiration date in YYYY-MM-DD format
+</ResponseField>
+
+<ResponseField name="dte" type="integer">
+  Days to expiration
+</ResponseField>
+
+## Next Steps
+
+Explore the specific endpoint categories to learn more about available functionality:
+
+- [Option Chains](/api/option-chains) - Real-time options data
+- [Calculations](/api/calculations) - Strategy P&L modeling
+- [AI Insights](/api/ai-insights) - Greeks and LLM analysis
+- [Recommender](/api/recommender) - Strategy recommendations
+- [Market Data](/api/market-data) - Comprehensive market context

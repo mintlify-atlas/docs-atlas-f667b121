@@ -1,0 +1,390 @@
+---
+title: 'Interpreting the Payoff Simulator'
+description: 'Visualize profit and loss across price and time scenarios'
+icon: 'chart-area'
+---
+
+# Interpreting the Payoff Simulator
+
+The Payoff Simulator (heatmap) is your crystal ball - it shows exactly how your strategy performs across different price levels and time periods using the Black-Scholes options pricing model.
+
+## How the Simulator Works
+
+The platform generates a **multi-dimensional grid** that:
+
+1. **Iterates underlying price** from -25% to +25% of current spot (250 price points)
+2. **Simulates time decay** across 5 time intervals (today → expiration)
+3. **Recalculates position value** using Black-Scholes at each grid point
+4. **Computes P&L** by comparing simulated value to initial cost
+
+<Note>
+The engine simulates **250 price steps** and adds critical points (your strikes, current spot) to ensure mathematical accuracy. This is why your profit/loss curves have perfect "V" shapes or "wings."
+</Note>
+
+## Reading the Interactive Chart
+
+The main display shows an **area chart** with profit (green) above zero and loss (red) below zero.
+
+### Chart Elements
+
+**X-Axis (Horizontal):** Simulated underlying price  
+**Y-Axis (Vertical):** Profit & Loss in USD  
+**Green Area:** Profitable price zones  
+**Red Area:** Loss price zones  
+**White Dashed Line:** Break-even (zero P&L)
+
+### Interactive Controls
+
+<Steps>
+  <Step title="Time Evolution Slider">
+    Move the "Días de Evolución" slider to see how your P&L changes over time.
+    
+    - **0 days:** P&L if you closed today (maximum extrinsic value)
+    - **Mid-point:** P&L at some point before expiration  
+    - **Max days:** P&L at expiration (intrinsic value only)
+    
+    <Tip>
+    Watch how theta decay affects your position. Long options lose value over time (lines move DOWN), short options gain value (lines move UP).
+    </Tip>
+  </Step>
+  
+  <Step title="Volatility Shock Slider">
+    Move the "Shock de Volatilidad (IV)" slider to simulate implied volatility changes.
+    
+    - **-50%:** Volatility collapses (post-earnings, VIX drop)
+    - **0%:** Current IV baseline (30% assumption)
+    - **+50%:** Volatility spikes (market crash, pre-earnings)
+    
+    <Warning>
+    Volatility shocks dramatically affect option prices. A +30% IV spike can turn losing trades profitable or destroy short premium positions.
+    </Warning>
+  </Step>
+  
+  <Step title="Hover for Details">
+    Hover over any point on the chart to see:
+    - Exact underlying price
+    - P&L at that price
+    - Current simulation parameters
+  </Step>
+</Steps>
+
+## Key Metrics Panel
+
+Above the chart, four critical metrics summarize your strategy:
+
+### Net Premium
+
+The initial cash flow when opening the position.
+
+- **Positive (Credit):** You collected money  
+  Example: +$450 → You received $450 credit
+  
+- **Negative (Debit):** You paid money  
+  Example: -$380 → You paid $380 debit
+
+<Tabs>
+  <Tab title="Credit Strategies">
+    **You collected premium:**
+    - Iron Condors
+    - Credit Spreads  
+    - Covered Calls
+    - Short Strangles
+    
+    **Profit mechanism:** Keep the credit if options expire worthless.
+  </Tab>
+  
+  <Tab title="Debit Strategies">
+    **You paid premium:**
+    - Long Calls/Puts
+    - Debit Spreads
+    - Straddles
+    - Calendar Spreads
+    
+    **Profit mechanism:** Options must increase in value to overcome debit paid.
+  </Tab>
+</Tabs>
+
+### Max Loss
+
+The worst possible outcome (maximum loss scenario).
+
+**Defined Risk Strategies:**  
+Max Loss = Width of spread - Net Credit (or + Net Debit)
+
+Example Iron Condor:
+- $5 wide spreads
+- $2 net credit  
+- Max Loss = $500 - $200 = **-$300**
+
+<Warning>
+If Max Loss shows a very large number (> $1000), you may have naked option risk. Verify your position has protective long options.
+</Warning>
+
+### Break-Even Points
+
+The exact price levels where P&L = $0 at expiration.
+
+**One Break-Even:**  
+→ Directional spread (bull call, bear put)
+
+**Two Break-Evens:**  
+→ Neutral strategy with profit zone (iron condor, strangle)
+
+Example: Break-Evens at $495 and $515
+- Stock between $495-$515: **Profit**
+- Stock below $495 or above $515: **Loss**
+
+<Tip>
+The wider the break-even range, the higher your probability of profit. Iron condors aim for 70-80% probability by keeping short strikes far OTM.
+</Tip>
+
+### Max Profit
+
+The best possible outcome (maximum profit scenario).
+
+**Credit Strategies:**  
+Max Profit = Net Credit (if all short options expire worthless)
+
+**Debit Spreads:**  
+Max Profit = Width of spread - Net Debit (if price reaches/exceeds long strike)
+
+**Undefined Profit:**
+Long naked options have theoretically unlimited profit (calls) or maximum profit at $0 (puts).
+
+## Common Payoff Patterns
+
+### Iron Condor (Neutral)
+
+```
+  Profit
+    ↑
+    |    ___plateau___
+    |   /             \
+----0--/---------------\----  (Break-even)
+    | /                 \
+    |/                   \  
+    Loss
+    ←―――――――――→ Price
+```
+
+**Characteristics:**
+- Flat profit zone in the middle (max profit)
+- Losses increase outside the zone
+- Max profit = Credit collected
+- Max loss = (Spread width - Credit) × 100
+
+### Bull Call Spread (Bullish)
+
+```
+  Profit
+    ↑
+    |            _____max profit
+    |           /
+----0----------/  (Break-even)
+    |         /
+    |________/ max loss
+    Loss
+    ←―――――――――→ Price
+```
+
+**Characteristics:**
+- Hockey stick shape
+- Profits increase as price rises
+- Max loss below lower strike
+- Max profit above upper strike
+
+### Long Straddle (Volatility)
+
+```
+  Profit
+    ↑
+    |   /         \
+    |  /           \
+----0-/-------------\---  (Break-even)
+    | | Strike     |
+    Loss (center)
+    ←―――――――――→ Price  
+```
+
+**Characteristics:**
+- V-shaped loss zone at center strike
+- Profits from large moves either direction  
+- Max loss at the strike (if no movement)
+- Break-evens on both sides
+
+### Covered Call (Income)
+
+```
+  Profit
+    ↑
+    |            _____ capped profit
+    |           /
+----0----------/
+    |         /
+    |        / 
+    |-------/
+    Loss
+    ←―――――――――→ Price
+```
+
+**Characteristics:**
+- Diagonal line transitioning to flat
+- Profit capped at short call strike
+- Loss potential down to $0 (own stock)
+- Cushioned by premium collected
+
+## Time Decay Visualization
+
+Move the time slider to see how theta affects your P&L:
+
+<Accordion title="Long Options (Negative Theta)">
+  **As time passes:**
+  - The entire P&L curve shifts DOWN
+  - Break-evens move further apart (need bigger move)
+  - Max loss deepens (losing extrinsic value)
+  
+  **Example - Long Call:**
+  - Day 0: Profit above $105
+  - Day 15: Profit above $107 (need higher move)
+  - Expiration: Profit above $108 (all extrinsic gone)
+  
+  This is why you can't hold long options forever - theta bleeds you out.
+</Accordion>
+
+<Accordion title="Short Options (Positive Theta)">
+  **As time passes:**
+  - The entire P&L curve shifts UP
+  - Break-evens move closer (higher probability)
+  - Max profit approaches asymptote
+  
+  **Example - Iron Condor:**
+  - Day 0: Profit between $495-$515, +$150 max
+  - Day 15: Profit between $496-$514, +$180 max  
+  - Expiration: Profit between $497-$513, +$200 max
+  
+  Time is your friend - the premium you collected decays to full profit.
+</Accordion>
+
+<Accordion title="Neutral Strategies">
+  **Mixed theta positions:**
+  - Some legs gain from theta (short)
+  - Some legs lose from theta (long)
+  - Net effect depends on which dominates
+  
+  **Example - Calendar Spread:**
+  - Sell near-term option (high theta decay)
+  - Buy far-term option (low theta decay)  
+  - Net positive theta if managed correctly
+</Accordion>
+
+## Volatility Scenario Testing
+
+The volatility shock slider lets you stress-test your position:
+
+<Steps>
+  <Step title="Baseline (0% shock)">
+    The current P&L based on existing 30% IV assumption. This is your "expected" scenario.
+  </Step>
+  
+  <Step title="Volatility Collapse (-30 to -50%)">
+    **Happens after:**
+    - Earnings announcement passes
+    - VIX drops from 30 → 15
+    - Market calms after crash
+    
+    **Effects:**
+    - Long options LOSE value (vega crush)
+    - Short options GAIN value (vega profit)
+    - P&L curves compress toward intrinsic value
+  </Step>
+  
+  <Step title="Volatility Spike (+30 to +50%)">
+    **Happens during:**
+    - Market crashes (VIX spikes to 40+)
+    - Before earnings events
+    - Geopolitical uncertainty
+    
+    **Effects:**
+    - Long options GAIN value (vega expansion)
+    - Short options LOSE value (vega risk)
+    - P&L curves widen (bigger moves needed)
+  </Step>
+</Steps>
+
+<Warning>
+**Critical for Iron Condor traders:** A +40% volatility spike can turn a profitable trade into a max loss scenario even if price hasn't moved yet. This is why you never hold short premium through earnings.
+</Warning>
+
+## Identifying Strategy Problems
+
+### Asymmetric Risk
+
+If your heatmap shows:
+- Max profit: +$200  
+- Max loss: -$800
+
+**Problem:** Risk/reward ratio is 1:4. You need 80% win rate just to break even. Re-evaluate the trade.
+
+<Tip>
+Aim for risk/reward ratios of 1:2 or better for directional trades. For credit strategies, target premium that's 20-30% of max risk.
+</Tip>
+
+### Narrow Break-Even Range
+
+If your break-evens are very close together (e.g., $99-$101 with stock at $100):
+
+**Problem:** You need precision timing and are fighting high theta. Widen your strikes or extend duration.
+
+### Exponential Loss Curves
+
+If your losses accelerate rapidly as price moves:
+
+**Problem:** You have negative gamma exposure. Small movements balloon into big losses.
+
+**Solution:** Reduce size, set strict stop losses, or close position before testing strikes.
+
+## Pro Tips for Heatmap Analysis
+
+1. **Test extreme scenarios:** Slide volatility to +50% and time to expiration. Can you survive?
+2. **Find your sweet spot:** Where is the profit zone? How likely is price to stay there?
+3. **Identify danger zones:** Where do losses accelerate? Set alerts at those prices.
+4. **Compare time snapshots:** How much does theta help/hurt weekly vs. daily?
+5. **Validate expectations:** If you think stock goes to $X, does the heatmap show profit at $X?
+
+## Real-World Example Walkthrough
+
+**Setup:**  
+- Stock: SPY @ $500
+- Strategy: Iron Condor
+- Short Strikes: $490 Put, $510 Call  
+- Long Strikes: $485 Put, $515 Call
+- Net Credit: +$200
+- Days to Expiration: 30
+
+**Heatmap Analysis:**
+
+1. **Max Profit:** +$200 (credit collected)
+2. **Max Loss:** -$300 (($5 spread - $2 credit) × 100)
+3. **Break-Evens:** $488 and $512
+4. **Profit Zone:** $488-$512 (24 point range, ~4.8% of price)
+
+**Time Test:**
+- Day 0: Max profit requires extreme OTM
+- Day 15: Profit zone expands to $489-$511  
+- Day 30: Full profit if inside $490-$510
+
+**Volatility Test:**
+- -30% shock: Profit increases to +$240
+- +30% shock: Loss risk increases to -$380
+
+**Decision:** Trade is solid if SPY stays calm. Exit if VIX spikes above 25 or price breaches $492/$508.
+
+## Next Steps
+
+- Analyze your [Greeks](/guides/understanding-greeks) to understand why the P&L curve looks the way it does
+- Use the [AI Analyst](/guides/using-ai-analyst) to validate if your profit zone aligns with market conditions  
+- Apply [Risk Management](/guides/risk-management) rules based on max loss and break-evens
+
+<Tip>
+The heatmap is only as good as the assumptions. The platform uses 30% base IV and 5% risk-free rate. Real market conditions vary, so always add a margin of safety to your analysis.
+</Tip>

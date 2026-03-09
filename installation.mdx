@@ -1,0 +1,591 @@
+---
+title: 'Installation'
+description: 'Complete setup guide for OptionStrat AI'
+---
+
+## System Requirements
+
+Before installing OptionStrat AI, ensure your system meets these requirements:
+
+### Backend Requirements
+
+- **Python**: Version 3.8 or higher
+- **pip**: Python package manager
+- **Operating System**: Windows, macOS, or Linux
+- **RAM**: Minimum 4GB (8GB recommended for large option chains)
+- **Storage**: ~500MB for dependencies
+
+### Frontend Requirements
+
+- **Node.js**: Version 16 or higher
+- **npm**: Version 7 or higher (comes with Node.js)
+- **Modern Browser**: Chrome, Firefox, Safari, or Edge (latest version)
+
+### API Requirements
+
+- **OpenAI API Key**: Required for AI Insights feature (optional for other features)
+- **Internet Connection**: Required for fetching real-time market data from Yahoo Finance
+
+<Note>
+You can verify your Python and Node.js versions:
+```bash
+python --version  # or python3 --version
+node --version
+npm --version
+```
+</Note>
+
+## Backend Installation
+
+<Steps>
+
+<Step title="Navigate to Backend Directory">
+Open your terminal and navigate to the backend folder:
+
+```bash
+cd ~/workspace/source/backend
+```
+</Step>
+
+<Step title="Create Virtual Environment">
+Creating a virtual environment isolates your Python dependencies:
+
+<CodeGroup>
+
+```bash Windows
+# Create virtual environment
+python -m venv venv
+
+# Activate the environment
+venv\Scripts\activate
+```
+
+```bash macOS/Linux
+# Create virtual environment
+python3 -m venv venv
+
+# Activate the environment
+source venv/bin/activate
+```
+
+</CodeGroup>
+
+You'll see `(venv)` in your terminal prompt when activated.
+
+<Tip>
+To deactivate the virtual environment later, simply run `deactivate`
+</Tip>
+</Step>
+
+<Step title="Install Python Dependencies">
+With the virtual environment activated, install all required packages:
+
+```bash
+pip install -r requeriments.txt
+```
+
+This installs all dependencies including:
+- **FastAPI** - Async web framework
+- **Uvicorn** - ASGI server
+- **Pydantic** - Data validation
+- **NumPy & Pandas** - Numerical computing
+- **SciPy** - Black-Scholes calculations
+- **yfinance & yahooquery** - Market data
+- **LiteLLM** - LLM router (OpenAI/OpenRouter)
+- **VaderSentiment** - News sentiment analysis
+- **BeautifulSoup4** - Web scraping
+
+<Note>
+The installation may take 2-5 minutes depending on your internet speed.
+</Note>
+</Step>
+
+<Step title="Configure Environment Variables">
+Create a `.env` file in the backend directory:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file with your preferred text editor and configure your API keys:
+
+```bash .env
+# AI Provider Configuration
+AI_PROVIDER=openai
+
+# OpenAI Configuration (recommended)
+OPENAI_API_KEY=sk-your-actual-openai-key-here
+OPENAI_DEFAULT_CHAT_MODEL=gpt-4o
+
+# Alternative: OpenRouter (if using OpenRouter instead)
+# OPENROUTER_API_KEY=your-openrouter-key-here
+# DEFAULT_CHAT_MODEL=openrouter/free
+```
+
+<Warning>
+**Never commit your `.env` file to version control.** It contains sensitive API keys. The `.env` file is already in `.gitignore` to prevent accidental commits.
+</Warning>
+
+### Getting an OpenAI API Key
+
+1. Visit [OpenAI Platform](https://platform.openai.com/)
+2. Sign up or log in to your account
+3. Navigate to **API Keys** section
+4. Click **Create new secret key**
+5. Copy the key and paste it in your `.env` file
+
+<Tip>
+The GPT-4o model (`gpt-4o`) provides excellent analysis. You can also use `gpt-4-turbo` or `gpt-3.5-turbo` for lower costs.
+</Tip>
+</Step>
+
+<Step title="Verify Backend Installation">
+Start the FastAPI development server:
+
+```bash
+uvicorn app.main:app --reload
+```
+
+You should see output like:
+
+```
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [12345] using StatReload
+INFO:     Started server process [12346]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+```
+
+Test the API by opening your browser to `http://127.0.0.1:8000/` or using curl:
+
+```bash
+curl http://127.0.0.1:8000/
+```
+
+Expected response:
+```json
+{
+  "status": "ok",
+  "message": "OptionStrat Backend is running."
+}
+```
+</Step>
+
+</Steps>
+
+## Frontend Installation
+
+<Steps>
+
+<Step title="Navigate to Frontend Directory">
+Open a **new terminal window** (keep the backend running) and navigate to the frontend folder:
+
+```bash
+cd ~/workspace/source/frontend
+```
+</Step>
+
+<Step title="Install Node Dependencies">
+Install all required npm packages:
+
+```bash
+npm install
+```
+
+This installs:
+- **React 19** - UI framework
+- **Vite** - Fast build tool and dev server
+- **Zustand** - State management
+- **Axios** - HTTP client for API calls
+- **Recharts** - Data visualization
+- **Lucide React** - Icon library
+
+<Note>
+The installation typically takes 1-3 minutes. You'll see a `node_modules/` folder created with all dependencies.
+</Note>
+</Step>
+
+<Step title="Configure API Endpoint (Optional)">
+The frontend is pre-configured to connect to `http://127.0.0.1:8000/api`. If you need to change this, edit `src/api/client.js`:
+
+```javascript src/api/client.js
+import axios from 'axios';
+
+const api = axios.create({
+    baseURL: 'http://127.0.0.1:8000/api',  // Change this if backend runs elsewhere
+    timeout: 10000,
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
+
+export default api;
+```
+</Step>
+
+<Step title="Start Development Server">
+Launch the Vite development server:
+
+```bash
+npm run dev
+```
+
+You should see:
+
+```
+  VITE v7.3.1  ready in 523 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: use --host to expose
+  ➜  press h + enter to show help
+```
+
+Open your browser to the URL shown (typically `http://localhost:5173/`).
+</Step>
+
+<Step title="Verify Frontend Installation">
+You should see the OptionStrat AI welcome screen with:
+- The application header showing "OptionStrat AI"
+- A search box for entering tickers
+- Quick-select buttons for AAPL, TSLA, NVDA, and SPY
+- A mascot/welcome message
+
+<Tip>
+The frontend supports hot-reload. Any changes you make to the code will automatically refresh in the browser.
+</Tip>
+</Step>
+
+</Steps>
+
+## Complete Setup Verification
+
+With both backend and frontend running, verify the complete integration:
+
+<Steps>
+
+<Step title="Load a Ticker">
+1. In your browser at `http://localhost:5173/`
+2. Type `AAPL` in the search box
+3. Press **Enter**
+
+You should see:
+- The current AAPL spot price appear in the header
+- Available expiration dates load in the dropdown
+- The option chain table populates with calls and puts
+</Step>
+
+<Step title="Test API Endpoints">
+Verify each backend endpoint is working:
+
+```bash
+# Health check
+curl http://127.0.0.1:8000/
+
+# Get expirations for a ticker
+curl http://127.0.0.1:8000/api/options/expirations/SPY
+
+# Get option chain
+curl "http://127.0.0.1:8000/api/options/chain/SPY?expiration=2026-06-19"
+
+# Test strategy recommender
+curl -X GET "http://127.0.0.1:8000/api/options/recommend/AAPL?bias=neutral&risk_profile=balanced&min_dte=30&max_dte=60"
+```
+</Step>
+
+<Step title="Test AI Insights">
+If you configured your OpenAI API key:
+
+1. Build a simple strategy (e.g., buy a call)
+2. Click **"Analizar con IA"** in the AI Insights panel
+3. You should see the AI analysis appear with risk score and recommendations
+
+<Note>
+If the AI Insights don't work, verify your `OPENAI_API_KEY` is correctly set in the `.env` file and the backend has been restarted.
+</Note>
+</Step>
+
+</Steps>
+
+## Environment Variables Reference
+
+Here's a complete reference of all available environment variables:
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `AI_PROVIDER` | No | `openai` | AI provider to use (`openai` or `openrouter`) |
+| `OPENAI_API_KEY` | Yes* | - | Your OpenAI API key for AI insights |
+| `OPENAI_DEFAULT_CHAT_MODEL` | No | `gpt-4o` | OpenAI model to use for analysis |
+| `OPENROUTER_API_KEY` | Yes** | - | Your OpenRouter API key (if using OpenRouter) |
+| `DEFAULT_CHAT_MODEL` | No | `openrouter/free` | OpenRouter model selection |
+
+*Required only if `AI_PROVIDER=openai`  
+**Required only if `AI_PROVIDER=openrouter`
+
+## Troubleshooting
+
+### Backend Issues
+
+<AccordionGroup>
+
+<Accordion title="ModuleNotFoundError: No module named 'fastapi'">
+**Problem**: Dependencies not installed or wrong Python environment
+
+**Solution**:
+```bash
+# Ensure virtual environment is activated
+source venv/bin/activate  # macOS/Linux
+venv\Scripts\activate      # Windows
+
+# Reinstall dependencies
+pip install -r requeriments.txt
+```
+</Accordion>
+
+<Accordion title="Port 8000 is already in use">
+**Problem**: Another application is using port 8000
+
+**Solution**:
+```bash
+# Option 1: Kill the process using port 8000
+# Windows
+netstat -ano | findstr :8000
+taskkill /PID <PID> /F
+
+# macOS/Linux
+lsof -ti:8000 | xargs kill -9
+
+# Option 2: Use a different port
+uvicorn app.main:app --reload --port 8001
+```
+
+Update the frontend `src/api/client.js` baseURL to match the new port.
+</Accordion>
+
+<Accordion title="OpenAI API Error: Invalid API Key">
+**Problem**: API key is incorrect or not properly set
+
+**Solution**:
+1. Verify your `.env` file exists in the `backend/` directory
+2. Check the API key format (starts with `sk-`)
+3. Ensure no extra spaces or quotes around the key
+4. Restart the backend server after editing `.env`
+
+```bash
+# Stop the server (Ctrl+C)
+# Verify .env content
+cat .env
+
+# Restart server
+uvicorn app.main:app --reload
+```
+</Accordion>
+
+<Accordion title="Yahoo Finance data not loading">
+**Problem**: Network issues or Yahoo Finance rate limiting
+
+**Solution**:
+1. Check your internet connection
+2. Try a different ticker symbol
+3. Wait a few minutes if rate-limited
+4. Verify yfinance is installed: `pip show yfinance`
+</Accordion>
+
+<Accordion title="'venv' is not recognized (Windows)">
+**Problem**: Virtual environment not created properly
+
+**Solution**:
+```bash
+# Try using py launcher
+py -m venv venv
+
+# Or specify Python version
+python3 -m venv venv
+
+# If still failing, install virtualenv
+pip install virtualenv
+virtualenv venv
+```
+</Accordion>
+
+</AccordionGroup>
+
+### Frontend Issues
+
+<AccordionGroup>
+
+<Accordion title="npm ERR! code ENOENT">
+**Problem**: npm not installed or not in PATH
+
+**Solution**:
+1. Install Node.js from [nodejs.org](https://nodejs.org/)
+2. Restart your terminal
+3. Verify installation: `node --version && npm --version`
+</Accordion>
+
+<Accordion title="Port 5173 is already in use">
+**Problem**: Another Vite dev server is running
+
+**Solution**:
+```bash
+# Vite will automatically use the next available port
+# Or specify a different port:
+npm run dev -- --port 5174
+```
+</Accordion>
+
+<Accordion title="Cannot connect to backend / Network Error">
+**Problem**: Backend not running or CORS issue
+
+**Solution**:
+1. Verify backend is running: `curl http://127.0.0.1:8000/`
+2. Check the frontend is using correct API URL in `src/api/client.js`
+3. Verify no firewall is blocking connections
+4. Check browser console (F12) for detailed error messages
+</Accordion>
+
+<Accordion title="npm install fails with EACCES">
+**Problem**: Permission issues on macOS/Linux
+
+**Solution**:
+```bash
+# Option 1: Fix npm permissions
+sudo chown -R $USER /usr/local/lib/node_modules
+
+# Option 2: Use nvm (Node Version Manager)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+nvm install node
+```
+</Accordion>
+
+<Accordion title="React components not rendering">
+**Problem**: Build or dependency issue
+
+**Solution**:
+```bash
+# Clear node_modules and reinstall
+rm -rf node_modules package-lock.json
+npm install
+
+# Clear Vite cache
+rm -rf node_modules/.vite
+
+# Restart dev server
+npm run dev
+```
+</Accordion>
+
+</AccordionGroup>
+
+### Data and API Issues
+
+<AccordionGroup>
+
+<Accordion title="Option chain returns empty data">
+**Problem**: No options available for selected ticker/expiration
+
+**Solution**:
+1. Try a more liquid ticker (AAPL, SPY, TSLA)
+2. Select a different expiration date
+3. Some stocks don't have listed options
+4. Check if market is open (data updates during trading hours)
+</Accordion>
+
+<Accordion title="Greeks calculation errors">
+**Problem**: Invalid inputs for Black-Scholes model
+
+**Solution**:
+The system handles this automatically, but if you see issues:
+1. Check that implied volatility > 0
+2. Verify expiration date is in the future
+3. Ensure strike prices are valid numbers
+</Accordion>
+
+<Accordion title="AI Insights not appearing">
+**Problem**: OpenAI API key not configured or quota exceeded
+
+**Solution**:
+1. Verify `.env` file has valid `OPENAI_API_KEY`
+2. Check OpenAI account has available credits
+3. View backend logs for detailed error messages
+4. Try using `gpt-3.5-turbo` model for lower costs
+</Accordion>
+
+</AccordionGroup>
+
+## Production Deployment
+
+For deploying OptionStrat AI to production:
+
+<Warning>
+Production deployment requires additional security configurations including:
+- Proper CORS settings (replace `allow_origins=["*"]` in `app/main.py`)
+- Environment-specific API keys
+- HTTPS/SSL certificates
+- Rate limiting and authentication
+- Database for user portfolios (optional)
+</Warning>
+
+### Backend Production
+
+```bash
+# Install production server
+pip install gunicorn
+
+# Run with production settings
+gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker --bind 0.0.0.0:8000
+```
+
+### Frontend Production
+
+```bash
+# Build production bundle
+npm run build
+
+# Serve with a static file server
+npm install -g serve
+serve -s dist -p 5173
+```
+
+<Note>
+For production deployment, consider using Docker, AWS, Heroku, or Vercel for easy scaling and management.
+</Note>
+
+## Performance Optimization
+
+### Backend Performance
+
+- **Caching**: Implement Redis for caching option chains and market data
+- **Database**: Add PostgreSQL for storing historical strategies and user data
+- **Rate Limiting**: Add rate limiting to prevent API abuse
+- **Async Processing**: Use Celery for long-running calculations
+
+### Frontend Performance
+
+- **Code Splitting**: Vite handles this automatically
+- **Lazy Loading**: Components load on demand
+- **Debouncing**: Already implemented in Zustand store for API calls
+- **CDN**: Serve static assets from a CDN in production
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Build your first strategy in 5 minutes
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore all available endpoints
+  </Card>
+  <Card title="Architecture" icon="diagram-project" href="/technical/architecture">
+    Understand the system design
+  </Card>
+  <Card title="Core Features" icon="sparkles" href="/features/option-builder">
+    Explore the platform's powerful features
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- **FastAPI Docs**: [fastapi.tiangolo.com](https://fastapi.tiangolo.com)
+- **React Docs**: [react.dev](https://react.dev)
+- **Vite Docs**: [vitejs.dev](https://vitejs.dev)
+- **Options Trading Basics**: Understanding Greeks, spreads, and risk management

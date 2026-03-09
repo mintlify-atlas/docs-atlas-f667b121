@@ -1,0 +1,402 @@
+---
+title: "AI Risk Analyzer"
+description: "Get instant Greek calculations, risk scoring, and AI-powered strategic analysis for your option positions"
+---
+
+## Overview
+
+The AI Risk Analyzer is your intelligent trading assistant that evaluates every aspect of your strategy. It combines real-time Greek calculations, market context analysis, and LLM-powered strategic insights to help you make informed decisions.
+
+<CardGroup cols={3}>
+  <Card title="Real-Time Greeks" icon="greek">
+    Delta, Gamma, Theta, Vega calculated instantly for your entire position
+  </Card>
+  <Card title="Risk Scoring" icon="gauge-high">
+    Danger metric (1-10) based on Greek exposure and portfolio risk
+  </Card>
+  <Card title="AI Analysis" icon="brain">
+    On-demand LLM evaluation with strategic recommendations
+  </Card>
+</CardGroup>
+
+## Three Analysis Tabs
+
+The terminal provides three specialized views:
+
+1. **IA & Riesgo**: Greeks, risk score, and AI strategic analysis
+2. **Contexto**: Fundamental data, analyst targets, and business metrics
+3. **Sentimiento**: News sentiment, insider activity, and market psychology
+
+## IA & Riesgo Tab
+
+### Net Greeks Dashboard
+
+The Greeks panel displays four critical metrics for your entire position:
+
+#### Delta (Δ)
+
+**What it measures**: Directional exposure
+
+```
+Positive Delta: Bullish position (benefits from price increase)
+Negative Delta: Bearish position (benefits from price decrease)
+Near Zero: Delta-neutral position
+```
+
+**Color coding**:
+- **Green**: Positive delta (long exposure)
+- **Red**: Negative delta (short exposure)
+
+<Note>
+Delta of +50 means your position moves roughly like 50 shares of stock. Each $1 move in the underlying changes your P&L by ~$50.
+</Note>
+
+#### Gamma (Γ)
+
+**What it measures**: Rate of delta change
+
+```
+Positive Gamma: Delta increases as stock rises (accelerating profits)
+Negative Gamma: Delta works against you (dangerous for short options)
+```
+
+**Warning threshold**:
+- Gamma < -10: Severe risk alert (expect rapid position changes)
+
+<Warning>
+Negative gamma means you're short options. As the stock moves against you, your delta exposure accelerates in the wrong direction.
+</Warning>
+
+#### Theta (Θ)
+
+**What it measures**: Time decay per day
+
+```
+Positive Theta: You earn money as time passes (credit strategies)
+Negative Theta: You lose money as time passes (debit strategies)
+```
+
+**Display format**: `+$15.50/dia` or `-$22.30/dia`
+
+<Tip>
+Theta accelerates as expiration approaches. A theta of +$15/day means you earn $15 each day, assuming price and volatility stay constant.
+</Tip>
+
+#### Vega (V)
+
+**What it measures**: Sensitivity to implied volatility changes
+
+```
+Positive Vega: You benefit from IV increases (long options)
+Negative Vega: You benefit from IV decreases (short options)
+```
+
+A vega of +200 means a 1% increase in IV adds $200 to your position value.
+
+### Risk Score (Peligro Metric)
+
+The danger metric is a 1-10 score calculated from your Greek exposure:
+
+| Score | Risk Level | Indicators |
+|-------|-----------|------------|
+| **1-3** | Low Risk | Balanced Greeks, modest exposure |
+| **4-6** | Moderate Risk | Standard directional or neutral strategies |
+| **7-8** | High Risk | Aggressive positioning, negative gamma |
+| **9-10** | Extreme Risk | Severe gamma risk, extreme theta decay |
+
+**Color coding**:
+- **Green badge (1-6)**: Position is within normal risk parameters
+- **Red badge (7-10)**: Position has elevated risk characteristics
+
+<Note>
+The score increases based on: |Delta| > 50, Theta < -20, Gamma < -10, and extreme Vega exposure.
+</Note>
+
+### Preliminary Verdict (Quick Tips)
+
+The system generates automatic warnings based on your Greeks:
+
+**Theta Alerts**:
+```
+"ALERTA: Riesgo de Theta acelerado. Pierdes $22.50/dia."
+→ You have negative theta over -20/day
+
+"Ingresas $15.00/dia por primas desgastadas (Theta positiva)."
+→ You're collecting time decay (credit strategy)
+```
+
+**Delta Alerts**:
+```
+"Cartera apalancada: Alcista (Delta +75.20)."
+→ High bullish exposure
+
+"Cartera apalancada: Bajista (Delta -80.50)."
+→ High bearish exposure
+```
+
+**Gamma Alerts**:
+```
+"ALERTA: Gamma negativo severo (Riesgo agudo de volatilidad)."
+→ You're short options with dangerous gamma exposure
+```
+
+<Warning>
+Pay special attention to negative gamma warnings. These indicate you're short options that can move against you quickly.
+</Warning>
+
+### AI Strategic Analysis
+
+Click the **"🤖 Evaluacion Estrategica Global"** button to request a comprehensive AI analysis.
+
+**What the AI evaluates**:
+
+<Steps>
+  <Step title="Position Structure">
+    Analyzes leg composition, strikes, and expiration alignment
+  </Step>
+  
+  <Step title="Greek Balance">
+    Evaluates whether your Greeks match your intended risk profile
+  </Step>
+  
+  <Step title="Market Context">
+    Incorporates sentiment, fundamentals, and analyst targets (if available)
+  </Step>
+  
+  <Step title="Risk/Reward Assessment">
+    Calculates probability of profit and suggests adjustments
+  </Step>
+  
+  <Step title="Strategic Recommendations">
+    Provides actionable advice on position management and exits
+  </Step>
+</Steps>
+
+**Sample AI output**:
+
+```
+Your Iron Condor on AAPL shows balanced risk with +$450 credit 
+and defined max loss of $1,050. The position has:
+
+• Positive theta (+$12/day) favoring time decay
+• Near-neutral delta (-5) as intended for a neutral strategy
+• Negative gamma (-15) requires monitoring if price approaches short strikes
+• Short vega (-80) will benefit from post-earnings IV crush
+
+Recommendation: Position is well-structured for a neutral play. 
+Consider taking profits at 50% of max gain ($225) or if the 
+underlying approaches either break-even point ($95.50 or $104.50).
+```
+
+<Tip>
+Use the AI analysis before entering trades to validate your setup, and after significant market moves to assess adjustments.
+</Tip>
+
+## Contexto Tab (Fundamental Analysis)
+
+Displays key fundamental metrics for the underlying ticker:
+
+### Business Summary
+
+- Company description (first 300 characters)
+- Industry and sector information
+
+### Pricing Metrics
+
+| Metric | Description |
+|--------|-------------|
+| **Spot** | Current underlying price |
+| **Target Mean** | Average analyst price target |
+| **Target Median** | Median analyst price target |
+| **Recommendation** | Consensus rating (buy, hold, sell, etc.) |
+
+### Valuation Ratios
+
+| Ratio | What It Means |
+|-------|---------------|
+| **P/E Forward** | Forward price-to-earnings (expected next 12 months) |
+| **P/E Trailing** | Trailing P/E (last 12 months) |
+| **Debt to Equity** | Financial leverage ratio |
+
+<Note>
+Use analyst targets to inform your strike selection. If the target mean is 10% above current price, consider bullish strategies.
+</Note>
+
+## Sentimiento Tab (Market Psychology)
+
+### VADER Finviz Sentiment Score
+
+The sentiment analyzer scrapes recent news headlines and calculates a composite score:
+
+**Score range**: -1.0 (very bearish) to +1.0 (very bullish)
+
+| Score Range | Sentiment | Color |
+|-------------|-----------|-------|
+| **+0.05 to +1.0** | Bullish | Green |
+| **-0.05 to +0.05** | Neutral | Orange |
+| **-1.0 to -0.05** | Bearish | Red |
+
+The score is displayed as a percentage (e.g., +15 = +0.15 compound score).
+
+<Tip>
+Sentiment is calculated from the last 5 days of news headlines using VADER (Valence Aware Dictionary and sEntiment Reasoner).
+</Tip>
+
+### Recent News Headlines
+
+The panel displays the 4 most recent headlines scraped from Finviz. Examples:
+
+```
+"Apple announces record quarterly earnings, beats estimates"
+"Concerns over supply chain disruptions impact guidance"
+"Analyst upgrades AAPL to Buy with $200 target"
+```
+
+### Insider Activity
+
+Two key metrics show insider trading patterns:
+
+**Insider Purchases** (Green)
+- Number of purchase transactions in recent period
+- Bullish signal when insiders are buying
+
+**Insider Sales** (Red)
+- Number of sale transactions in recent period
+- Context matters: Routine selling vs. unusual activity
+
+<Note>
+Heavy insider buying is often a bullish signal. Heavy selling may indicate concerns, but executives also sell for personal financial planning.
+</Note>
+
+### Top Insider Transactions
+
+Displays the 3 most recent insider trades:
+
+```
+Tim Cook (CEO)
++50,000 acciones
+
+John Smith (CFO)
+-25,000 acciones
+```
+
+- **Positive shares**: Purchases (green)
+- **Negative shares**: Sales (red)
+
+## How to Use the Three Tabs Together
+
+<Steps>
+  <Step title="Start with IA & Riesgo">
+    Check your Greeks and risk score. Ensure your position matches your intended risk profile
+  </Step>
+  
+  <Step title="Review Contexto">
+    Look at analyst targets and fundamentals. Do they support your directional bias?
+  </Step>
+  
+  <Step title="Check Sentimiento">
+    Review recent news and insider activity. Are there upcoming catalysts?
+  </Step>
+  
+  <Step title="Request AI Analysis">
+    Return to IA & Riesgo and click the AI button for a comprehensive evaluation that incorporates all three data sources
+  </Step>
+</Steps>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Monitor Greeks Daily" icon="chart-line">
+    Greeks change as the stock moves and time passes. Check them daily for active positions
+  </Card>
+  <Card title="Use Sentiment as Confirmation" icon="newspaper">
+    Don't trade on sentiment alone, but use it to confirm or question your thesis
+  </Card>
+  <Card title="Watch for Earnings" icon="calendar-day">
+    Check fundamentals for upcoming earnings dates (high IV environments)
+  </Card>
+  <Card title="Respect High Risk Scores" icon="triangle-exclamation">
+    If your risk score is 8+, seriously consider reducing position size or adjusting
+  </Card>
+</CardGroup>
+
+## Advanced Tips
+
+### Interpreting Greek Combinations
+
+**Positive Theta + Negative Gamma**:
+```
+Typical of: Iron Condors, Credit Spreads
+Strategy: You collect time decay but need price to stay in range
+Risk: Gamma works against you if price moves sharply
+```
+
+**Negative Theta + Positive Gamma**:
+```
+Typical of: Long Straddles, Calendar Spreads
+Strategy: You need price movement or volatility expansion
+Risk: Time decay works against you daily
+```
+
+**High |Delta| + High |Vega|**:
+```
+Typical of: Long or short single options
+Strategy: Directional play with volatility exposure
+Risk: Both price and IV can work against you
+```
+
+### When to Request AI Analysis
+
+✅ **Good times to use AI**:
+- Before entering a new multi-leg strategy
+- After a significant price move in the underlying
+- When considering adjustments to a losing position
+- Before earnings or major news events
+
+❌ **Don't spam the AI**:
+- Avoid requesting analysis for every small tweak
+- The Greeks panel updates automatically - use it for quick checks
+- Save AI analysis for strategic decisions
+
+<Warning>
+AI analysis calls the LLM backend and may take 5-10 seconds. Use it strategically, not for every position change.
+</Warning>
+
+## Troubleshooting
+
+### Greeks Show All Zeros
+
+**Cause**: No legs added to the strategy
+
+**Solution**: Build a position in the Option Builder
+
+### High Risk Score (9-10) on a Simple Spread
+
+**Cause**: Check for extreme gamma or theta values
+
+**Solution**: Review your strikes. Very close-to-ATM short options can have high gamma risk
+
+### Sentiment Shows "No News"
+
+**Cause**: Finviz may not have recent headlines for that ticker
+
+**Solution**: This is common for low-volume tickers. Focus on fundamentals instead
+
+### AI Analysis Returns Generic Response
+
+**Cause**: The LLM needs more context (ticker, market data)
+
+**Solution**: Ensure you've loaded a ticker and market context is available
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Optimize Your Strategy" href="/features/strategy-recommender" icon="wand-magic-sparkles">
+    Find better strategies with the AI-powered recommender
+  </Card>
+  <Card title="Track Market Sentiment" href="/features/market-sentiment" icon="chart-mixed">
+    Deep dive into sentiment analysis and news tracking
+  </Card>
+</CardGroup>

@@ -1,0 +1,212 @@
+---
+title: 'Building Options Strategies'
+description: 'Learn how to construct multi-leg options strategies using the Strategy Builder'
+icon: 'hammer'
+---
+
+# Building Options Strategies
+
+The Strategy Builder is your command center for constructing complex options positions. This guide will teach you how to build, modify, and optimize your strategies.
+
+## Understanding the Strategy Builder
+
+The Strategy Builder displays a **unified options chain** that shows calls and puts side-by-side with real-time bid/ask prices, volume, and open interest data.
+
+<Note>
+Each options contract represents 100 shares of the underlying stock. When you buy 1 call contract at $2.50, you're paying $250 ($2.50 × 100).
+</Note>
+
+## Building Your First Strategy
+
+<Steps>
+  <Step title="Enter a Ticker Symbol">
+    Type a valid stock ticker (e.g., SPY, AAPL, TSLA) in the search box. The platform will fetch live market data and populate the options chain.
+  </Step>
+  
+  <Step title="Select an Expiration Date">
+    Use the expiration dropdown to choose your target date. The platform displays all available expiration dates from the market.
+    
+    <Tip>
+    Shorter expirations (0-30 DTE) experience faster theta decay. Longer expirations (60+ DTE) give you more time for your thesis to play out.
+    </Tip>
+  </Step>
+  
+  <Step title="Add Option Legs">
+    Click on bid or ask prices to add positions:
+    - **Green BID button** = Sell the option (collect premium)
+    - **Red ASK button** = Buy the option (pay premium)
+    
+    The strategy builder shows 10 strikes closest to the current spot price.
+  </Step>
+  
+  <Step title="Add Stock Positions (Optional)">
+    Use the "+100 Acciones (Covered)" or "-100 Acciones (Short)" buttons to add underlying stock positions for covered calls, protective puts, or synthetic positions.
+  </Step>
+</Steps>
+
+## Popular Strategy Examples
+
+### Iron Condor (Neutral Strategy)
+
+An iron condor profits from low volatility and time decay. Here's how to build one:
+
+<Accordion title="Iron Condor Construction">
+  **Step-by-step:**
+  
+  1. **Sell OTM Put** (e.g., -1 contract at $95 strike)
+  2. **Buy Further OTM Put** (e.g., +1 contract at $90 strike) 
+  3. **Sell OTM Call** (e.g., -1 contract at $105 strike)
+  4. **Buy Further OTM Call** (e.g., +1 contract at $110 strike)
+  
+  **Characteristics:**
+  - Collects net premium (credit spread)
+  - Profits if price stays between short strikes
+  - Limited risk (width of spreads minus credit)
+  - Positive theta (earns from time decay)
+  
+  **Best for:** Low volatility environments, range-bound stocks
+</Accordion>
+
+### Vertical Spread (Directional Strategy)
+
+<Accordion title="Bull Call Spread Construction">
+  **Step-by-step:**
+  
+  1. **Buy ATM or ITM Call** (e.g., +1 contract at $100 strike)
+  2. **Sell Higher Strike Call** (e.g., -1 contract at $105 strike)
+  
+  **Characteristics:**
+  - Pays net debit (lower cost than naked call)
+  - Profits if price rises to short strike
+  - Limited risk (debit paid)
+  - Defined max profit (strike difference minus debit)
+  
+  **Best for:** Moderately bullish outlook with defined risk
+</Accordion>
+
+### Straddle (High Volatility Strategy)
+
+<Accordion title="Long Straddle Construction">
+  **Step-by-step:**
+  
+  1. **Buy ATM Call** (e.g., +1 contract at $100 strike)
+  2. **Buy ATM Put** (e.g., +1 contract at $100 strike, same expiration)
+  
+  **Characteristics:**
+  - Pays high net debit (buying two options)
+  - Profits from large moves in either direction
+  - High theta decay (negative theta)
+  - Needs large move to overcome premium paid
+  
+  **Best for:** Before earnings, expecting volatility spike
+</Accordion>
+
+## Reading the Options Chain
+
+The unified chain displays critical information for each strike:
+
+```
+CALL BID | CALL ASK | V/OI | STRIKE | V/OI | PUT BID | PUT ASK
+  2.50   |   2.55   | 120  |   100  |  85  |   1.80  |  1.85
+                      450
+```
+
+**Volume (V):** Contracts traded today - indicates current activity  
+**Open Interest (OI):** Total open contracts - indicates liquidity
+
+<Warning>
+Avoid options with low volume and open interest. They have wide bid-ask spreads and are difficult to exit. Look for Volume > 50 and OI > 100 as minimum liquidity thresholds.
+</Warning>
+
+## Managing Your Position
+
+### Removing Legs
+
+Click the **×** button next to any active position to remove it from your strategy.
+
+### Modifying Quantities
+
+Currently, each leg defaults to 1 contract. To scale positions:
+- Add the same leg multiple times, or
+- Build the base strategy and scale after analysis
+
+### Adjusting Expiration
+
+Change the expiration dropdown to view different dated contracts. This is useful for:
+- **Calendar spreads** (buy longer expiration, sell shorter expiration)
+- **Diagonal spreads** (different strikes AND expirations)
+- Finding better pricing or liquidity
+
+## Understanding Premium Flow
+
+The platform calculates your **Net Premium**:
+
+- **Credit (Positive)**: You collected more than you paid  
+  Example: Sell puts for $500, buy puts for $300 = +$200 credit
+  
+- **Debit (Negative)**: You paid more than you collected  
+  Example: Buy calls for $400, sell calls for $150 = -$250 debit
+
+<Note>
+Credit strategies generally benefit from time decay (positive theta). Debit strategies pay for directional exposure and fight theta decay.
+</Note>
+
+## Pro Tips for Strategy Building
+
+<Tabs>
+  <Tab title="Liquidity First">
+    Always prioritize liquid options:
+    - Major ETFs (SPY, QQQ, IWM) have the best liquidity
+    - Large-cap stocks (AAPL, MSFT, TSLA) have good liquidity
+    - Small-cap stocks often have illiquid options
+    
+    **Rule of thumb:** Bid-ask spread should be < 10% of the option price
+  </Tab>
+  
+  <Tab title="Strike Selection">
+    Choose strikes based on your outlook:
+    - **ITM (In-The-Money):** Higher delta, more expensive, behaves more like stock
+    - **ATM (At-The-Money):** Maximum gamma, sensitive to price movement
+    - **OTM (Out-of-The-Money):** Lower cost, lower probability, higher leverage
+    
+    Most strategies use ATM or slight OTM strikes for balance.
+  </Tab>
+  
+  <Tab title="Time Selection">
+    Match expiration to your timeframe:
+    - **0-7 DTE:** Day trading, scalping, very high theta
+    - **7-30 DTE:** Swing trading, weekly strategies
+    - **30-60 DTE:** Most common for defined risk strategies
+    - **60-90 DTE:** Longer-term directional plays
+    - **90+ DTE:** LEAPS, covered call wheels
+  </Tab>
+  
+  <Tab title="Position Sizing">
+    Never risk more than you can afford to lose:
+    - Limit each trade to 2-5% of account
+    - Debit strategies: risk = debit paid
+    - Credit strategies: risk = (spread width - credit) × 100
+    - Use the risk metrics in AI Insights to validate sizing
+  </Tab>
+</Tabs>
+
+## Common Mistakes to Avoid
+
+1. **Ignoring Liquidity**: Trading illiquid options costs you money on entry and exit
+2. **Buying Too Close to Expiration**: Theta decay accelerates in the final week
+3. **Overleveraging**: Options can go to zero - size appropriately
+4. **Ignoring IV Rank**: Don't buy expensive options (high IV) or sell cheap options (low IV)
+5. **No Exit Plan**: Know your profit target and stop loss before entering
+
+## Next Steps
+
+Once you've built your strategy:
+
+1. Review the [Payoff Simulator](/guides/interpreting-heatmaps) to visualize profit/loss scenarios
+2. Analyze [Greeks](/guides/understanding-greeks) to understand your risk exposure
+3. Get an [AI Analysis](/guides/using-ai-analyst) for strategy validation
+4. Implement proper [Risk Management](/guides/risk-management) rules
+
+<Tip>
+Start with simple strategies (single vertical spreads) before progressing to complex multi-leg positions (iron condors, butterflies). Master the basics first.
+</Tip>

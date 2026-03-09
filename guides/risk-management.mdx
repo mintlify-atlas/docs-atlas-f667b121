@@ -1,0 +1,494 @@
+---
+title: 'Risk Management'
+description: 'Essential risk management principles for options trading'
+icon: 'shield'
+---
+
+# Risk Management for Options Trading
+
+Risk management is the difference between profitable options traders and blown-up accounts. This guide teaches you how to size positions, set stops, and manage risk using the platform's tools.
+
+<Warning>
+**Critical Rule:** Never risk more than 2-5% of your account on a single trade. Options can go to zero - proper position sizing is mandatory.
+</Warning>
+
+## The Three Pillars of Risk Management
+
+<Steps>
+  <Step title="Position Sizing">
+    How much capital to allocate to each trade based on:
+    - Account size
+    - Risk score
+    - Strategy type  
+    - Greek exposure
+  </Step>
+  
+  <Step title="Stop Losses">
+    When to exit losing trades before they become catastrophic:
+    - Pre-defined loss thresholds
+    - Greek-based triggers
+    - Price level alerts
+  </Step>
+  
+  <Step title="Portfolio Diversification">
+    How to spread risk across:
+    - Multiple strategies
+    - Different expirations
+    - Uncorrelated underlyings
+  </Step>
+</Steps>
+
+## Position Sizing Framework
+
+### The 2-5% Rule
+
+Never risk more than 2-5% of your trading account on a single position.
+
+**Account Size: $10,000**
+
+| Risk Tolerance | Max Risk Per Trade | Max Position Value |
+|----------------|-------------------|-----------------|
+| Conservative | 2% = $200 | Depends on strategy |
+| Moderate | 3% = $300 | Depends on strategy |
+| Aggressive | 5% = $500 | Depends on strategy |
+
+<Note>
+Your "risk" is NOT the position value - it's the **maximum loss** from the Payoff Simulator.
+</Note>
+
+### Calculating Position Size
+
+<Tabs>
+  <Tab title="Defined Risk Strategies">
+    **Iron Condor, Credit Spreads, Debit Spreads**
+    
+    Max Loss is known upfront from the heatmap.
+    
+    **Example:**
+    - Account: $10,000
+    - Risk tolerance: 3% = $300 max loss
+    - Iron Condor max loss: -$250
+    
+    **Position size:** 1 contract (within limits)  
+    **Contracts allowed:** $300 / $250 = 1.2 → **1 contract max**
+    
+    <Tip>
+    Always round DOWN. If you can afford 2.8 contracts, trade 2, not 3.
+    </Tip>
+  </Tab>
+  
+  <Tab title="Long Options">
+    **Long Calls/Puts, Straddles**
+    
+    Max loss = Premium paid (can go to zero).
+    
+    **Example:**
+    - Account: $10,000  
+    - Risk tolerance: 3% = $300
+    - Long call debit: -$280 per contract
+    
+    **Position size:** 1 contract  
+    **Contracts allowed:** $300 / $280 = 1.07 → **1 contract max**
+    
+    With long options, your entire debit is at risk.
+  </Tab>
+  
+  <Tab title="Naked/Undefined Risk">
+    **Naked Calls/Puts, Short Strangles**
+    
+    Max loss is theoretically unlimited (calls) or substantial (puts).
+    
+    **Position sizing:**
+    - Use MUCH smaller percentages (0.5-1% max)
+    - Require margin and strict stop losses
+    - NOT recommended for beginners
+    
+    <Warning>
+    OptionStrat AI doesn't recommend naked options. If you trade them, risk 1% max and use stop losses at 20-30% of margin.
+    </Warning>
+  </Tab>
+</Tabs>
+
+### Greek-Based Position Sizing
+
+Adjust position size based on risk score and Greek exposure:
+
+**Risk Score from AI Analyst:**
+
+| Risk Score | Position Size | Reason |
+|------------|---------------|--------|
+| 1-3 | Up to 5% risk | Low risk, conservative strategy |
+| 4-6 | 3% risk | Moderate risk, standard |
+| 7-8 | 2% risk | High risk, theta or gamma issues |
+| 9-10 | 1% risk or avoid | Extreme risk, dangerous |
+
+**Example adjustment:**
+- Normal position: $300 risk (3%)
+- Risk score: 8 (negative gamma alert)  
+- Adjusted position: $200 risk (2%)
+- Contracts: Reduce by 33%
+
+## Stop Loss Strategies
+
+Stop losses are mandatory for options trading - they prevent small losses from becoming account-wipes.
+
+### Percentage-Based Stops
+
+Exit when position loses X% of max risk.
+
+<Accordion title="Defined Risk Stops (25-50%)">
+  **For Iron Condors, Credit Spreads:**
+  
+  - Max Risk: $400
+  - Stop at 50%: Exit if down **$200**  
+  - Stop at 25%: Exit if down **$100**
+  
+  **Rationale:**  
+  If you're down 50% on a credit spread, price has moved significantly against you. Don't wait for max loss - cut it.
+  
+  **Implementation:**
+  Set a GTC (Good-Til-Canceled) order to close position if it reaches stop value.
+</Accordion>
+
+<Accordion title="Long Option Stops (50-75%)">
+  **For Long Calls/Puts, Debit Spreads:**
+  
+  - Premium Paid: $300
+  - Stop at 50%: Exit if down to **$150** value
+  - Stop at 75%: Exit if down to **$75** value
+  
+  **Rationale:**
+  Long options decay over time. If you're down 50% and theta is negative, the bleeding won't stop. Cut losses and redeploy capital.
+  
+  **Exception:**
+  If you have strong conviction and time remaining (30+ DTE), you can hold through 50% drawdown - but 75% is the hard stop.
+</Accordion>
+
+### Greek-Based Stops
+
+Use the platform's Greek warnings as triggers:
+
+<Steps>
+  <Step title="Delta Stop: |Δ| > 50">
+    If your position delta exceeds ±50, you have high directional risk.
+    
+    **Action:**
+    - Set stop loss at 20-30% of position value  
+    - Monitor price daily
+    - Reduce size if delta grows further
+    
+    **Example:**
+    Bull call spread starts at +32 delta. Stock rallies, now +68 delta. Exit or take partial profits - you're overleveraged.
+  </Step>
+  
+  <Step title="Gamma Stop: Γ < -10">
+    Negative gamma means losses accelerate as price moves.
+    
+    **Action:**
+    - Set stops at short strikes ± $2  
+    - Close position if price breaches one side
+    - Don't wait for max loss
+    
+    **Example:**
+    Iron condor with short strikes at $490/$510. Set alerts at $492 and $508. If triggered, close immediately.
+  </Step>
+  
+  <Step title="Theta Stop: Θ < -20">
+    Losing more than $20/day from time decay.
+    
+    **Action:**
+    - Set time-based stop (e.g., close in 7 days if no profit)
+    - Don't hold theta bleeders hoping for a miracle  
+    - Roll to longer expiration or exit
+    
+    **Example:**
+    Long call down 30% with -25 theta. Stock hasn't moved in 5 days. Exit now - theta will kill you.
+  </Step>
+</Steps>
+
+### Price Level Stops
+
+Set stops at technical levels or strike breaches:
+
+<Tabs>
+  <Tab title="Support/Resistance Stops">
+    **For directional trades:**
+    
+    - Bull call spread: Stop if stock breaks below support
+    - Bear put spread: Stop if stock breaks above resistance  
+    - Use technical analysis to identify levels
+    
+    **Example:**
+    Stock at $100, support at $97. You're long calls. Set stop at $96.50 (below support).
+  </Tab>
+  
+  <Tab title="Strike Breach Stops">
+    **For credit spreads and iron condors:**
+    
+    Exit when price touches or breaches your short strike.
+    
+    **Example:**
+    Iron condor with short $490 put. Stock drops to $490.50. Close immediately - don't wait for $490.
+    
+    **Why:** Once price is at your short strike, max loss is imminent. Exiting here saves capital.
+  </Tab>
+  
+  <Tab title="Break-Even Stops">
+    **For long options near expiration:**
+    
+    If you're below break-even with < 7 DTE, exit.
+    
+    **Example:**
+    Long call, break-even at $105. Stock at $102, 5 DTE. Exit - you need a 3% move in 5 days (unlikely).
+  </Tab>
+</Tabs>
+
+## Volatility Risk Management
+
+Implied volatility changes can make or break positions.
+
+### IV Rank and Strategy Selection
+
+<Note>
+The platform uses 30% baseline IV. In reality, check current IV rank before trading:
+- **VIX < 15:** Low IV, buy options (cheap)
+- **VIX 15-25:** Normal IV, mixed strategies  
+- **VIX > 25:** High IV, sell options (expensive)
+</Note>
+
+**High IV Strategies (VIX > 25):**
+- Iron condors (collect inflated premium)
+- Credit spreads (high credit)  
+- Covered calls (expensive calls)
+- AVOID buying options (you'll overpay)
+
+**Low IV Strategies (VIX < 15):**
+- Debit spreads (cheap entry)
+- Long calls/puts (low premium)  
+- AVOID selling naked options (not enough credit)
+
+### Vega Exposure Limits
+
+Control your volatility sensitivity:
+
+| Vega Range | Exposure Level | Action |
+|------------|----------------|--------|
+| -10 to +10 | Low | Acceptable for most accounts |
+| -30 to +30 | Moderate | Monitor VIX daily |
+| -50 to +50 | High | Reduce size, hedge vega |
+| |Vega| > 50 | Extreme | Cut position immediately |
+
+**Hedging Vega:**
+- Long vega (positive): Sell some options to reduce
+- Short vega (negative): Buy options to offset  
+- Use VIX calls/puts for portfolio-level vega hedge
+
+## Time Decay Management
+
+### Theta Portfolio Guidelines
+
+**Net Theta Targets:**
+
+- **Conservative account:** +$50 to +$200 daily theta income  
+  → Iron condors, covered calls
+  
+- **Aggressive account:** -$20 to +$20 net theta  
+  → Mix of directional and theta strategies
+  
+- **Speculation:** Negative theta acceptable with strong conviction  
+  → But limit to 30% of portfolio
+
+<Warning>
+Never have your entire portfolio in negative theta. If all positions are losing $X per day, you're on a treadmill - stock must move or you lose.
+</Warning>
+
+### Expiration Calendar
+
+Spread expirations to avoid "expiration risk":
+
+**Bad Portfolio:**
+- 5 positions, all expire Friday
+- If you're wrong, 100% of portfolio expires worthless
+
+**Good Portfolio:**
+- 2 positions expire this week  
+- 2 positions expire next month
+- 1 position expires in 60 days
+- If this week fails, you still have 60% of portfolio active
+
+## Portfolio Diversification
+
+### Don't Concentrate Risk
+
+<Steps>
+  <Step title="Diversify Underlyings">
+    Trade multiple symbols, not just one stock:
+    
+    **Bad:** 5 positions on TSLA  
+    **Good:** 1 on SPY, 1 on AAPL, 1 on QQQ, 1 on IWM, 1 on TSLA
+    
+    This protects against single-stock risk (earnings, CEO tweets, etc.).
+  </Step>
+  
+  <Step title="Diversify Strategies">
+    Mix directional and neutral strategies:
+    
+    **Example Portfolio:**
+    - 40% theta strategies (iron condors)
+    - 30% directional (bull call spreads)  
+    - 20% volatility (straddles)
+    - 10% stock (covered calls)
+    
+    If markets go sideways, theta profits. If they trend, directional profits. Balanced exposure.
+  </Step>
+  
+  <Step title="Diversify Expirations">
+    As discussed, spread expirations across weeks/months.
+  </Step>
+</Steps>
+
+### Correlation Awareness
+
+Some stocks move together (correlated):
+
+- **Tech stocks:** AAPL, MSFT, GOOGL, NVDA move together  
+- **Banks:** JPM, BAC, WFC move together
+- **Energy:** XOM, CVX, SLB move together
+
+Trading 5 tech stocks is NOT diversification - one sector event kills all positions.
+
+**Better:** Trade SPY (broad market), QQQ (tech), IWM (small cap), GLD (gold) - these have lower correlation.
+
+## Real-World Risk Scenarios
+
+### Scenario 1: The Theta Trap
+
+**Setup:**
+- Bought 5 ATM calls @ $3.00 each = -$1,500  
+- Theta: -$45/day
+- 20 DTE
+- Stock hasn't moved in 10 days
+
+**Situation:**
+- Down $450 from theta decay
+- Still 10 DTE remaining  
+- Will lose another $450 in 10 days
+
+**Risk Management Action:**
+- **Exit immediately** - you're in a theta trap  
+- Stock needs to move 10% in 10 days to break even (unlikely)
+- Cut losses at -$450, redeploy capital
+
+### Scenario 2: The Gamma Squeeze
+
+**Setup:**
+- Sold iron condor on meme stock  
+- Short strikes: $20 put, $30 call
+- Collected $200 credit
+- Gamma: -18
+
+**Situation:**
+- Stock pumps from $25 → $32 in one day
+- Position now -$450 (blown through call side)
+- Gamma accelerating losses
+
+**Risk Management Action:**
+- **Close immediately** - don't wait for $32 → $35  
+- Negative gamma means next move is even worse
+- Take -$450 loss instead of waiting for -$800 max loss
+
+### Scenario 3: IV Crush
+
+**Setup:**
+- Bought straddle before earnings  
+- Paid $800 premium
+- Stock at $100, expecting big move
+
+**Situation:**
+- Earnings: Stock moves $100 → $105 (5% move)
+- IV drops from 80% → 30% post-earnings  
+- Position value: $400 (down 50% despite correct move)
+
+**Risk Management Prevention:**
+- **Never hold long premium through earnings** (IV crush guaranteed)  
+- Exit before earnings or use spreads to mitigate vega
+- If you must play earnings, use half position size
+
+## Emergency Procedures
+
+### When Things Go Wrong
+
+<Accordion title="Position Down 50%+">
+  **Immediate actions:**
+  1. Open the Payoff Simulator - where are you on the curve?
+  2. Check Greeks - is gamma/theta making it worse?
+  3. Decide: Hold (with conviction) or Exit (cut losses)  
+  4. If exiting, close ALL legs simultaneously (don't leg out)
+  5. Accept the loss and move on
+  
+  **Never:** Hope and pray. Hope is not a strategy.
+</Accordion>
+
+<Accordion title="Market Crash (VIX Spike to 40+)">
+  **Immediate actions:**
+  1. If short premium (negative vega): **CLOSE NOW**  
+     IV spike will blow up iron condors, credit spreads
+  2. If long options (positive vega): **HOLD or TAKE PROFITS**  
+     Your positions likely gained value from vega expansion
+  3. Reduce all position sizes by 50%
+  4. Don't enter new positions until VIX < 30
+  5. Switch to long volatility strategies
+</Accordion>
+
+<Accordion title="Approaching Max Loss">
+  **If position is 80%+ of max loss:**
+  1. Close immediately - don't wait for 100%  
+  2. Salvage remaining capital
+  3. Example: Max loss -$500, currently -$420  
+     **Exit and save $80** instead of losing full $500
+  4. Review what went wrong (journal the trade)
+  5. Adjust strategy before next trade
+</Accordion>
+
+## Risk Management Checklist
+
+Before entering any trade, verify:
+
+- [ ] Position risk is 2-5% of account (1-2% if risk score > 7)
+- [ ] Stop loss is defined (percentage, Greek, or price level)  
+- [ ] Break-even points are realistic given time remaining
+- [ ] Liquidity is adequate (volume > 50, OI > 100)
+- [ ] Greeks are acceptable (check risk score)  
+- [ ] Not over-concentrated in one underlying/sector
+- [ ] Have plan for both profit target AND stop loss
+- [ ] Understand max loss scenario from heatmap
+
+<Tip>
+Print this checklist and use it EVERY trade. Discipline in risk management is what keeps you in the game long-term.
+</Tip>
+
+## The 10 Commandments of Options Risk
+
+1. **Never risk more than 5% on a single trade**
+2. **Always use stop losses (no exceptions)**  
+3. **Position size inversely to risk score** (higher risk = smaller size)
+4. **Diversify across underlyings and strategies**
+5. **Respect negative gamma** (it accelerates losses)
+6. **Don't fight theta on losing trades** (exit theta traps early)  
+7. **Check liquidity before trading** (volume > 50, OI > 100)
+8. **Never hold long premium through earnings** (IV crush)
+9. **Scale into winners, cut losers fast**
+10. **Journal every trade** (learn from mistakes)
+
+## Next Steps
+
+Now that you understand risk management:
+
+1. Review your [Strategy Builder](/guides/building-strategies) positions through a risk lens  
+2. Use [Greeks](/guides/understanding-greeks) to identify hidden risks
+3. Check the [Payoff Simulator](/guides/interpreting-heatmaps) for max loss scenarios
+4. Get [AI Analysis](/guides/using-ai-analyst) to validate risk scores
+
+<Warning>
+**Final Warning:** Options are leveraged instruments. You can lose 100% of your investment. Never trade with money you can't afford to lose. Risk management isn't optional - it's survival.
+</Warning>

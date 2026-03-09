@@ -1,80 +1,261 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: 'Quickstart'
+description: 'Get OptionStrat AI up and running in minutes'
 ---
 
-## Get started in three steps
+## Welcome to OptionStrat AI
 
-Get your documentation site running locally and make your first customization.
-
-### Step 1: Set up your local environment
-
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 2: Deploy your changes
-
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
-
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
-
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
-
-### Step 3: Go live
-
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
-
-## Next steps
-
-Now that you have your docs running, explore these key features:
-
-<CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
-</CardGroup>
+OptionStrat AI is an advanced derivatives simulator that combines **Black-Scholes-Merton pricing**, **AI-powered portfolio analysis**, and **real-time options data** to help you build and analyze complex options strategies.
 
 <Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
+This quickstart guide will have you analyzing your first options strategy in under 5 minutes.
 </Note>
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- **Python 3.8+** installed
+- **Node.js 16+** and npm installed
+- An **OpenAI API key** (for AI insights feature)
+
+## Quick Setup
+
+<Steps>
+
+<Step title="Clone the Repository">
+If you haven't already, clone or download the OptionStrat AI source code to your local machine.
+
+```bash
+cd ~/workspace/source
+```
+</Step>
+
+<Step title="Start the Backend Server">
+Navigate to the backend directory and launch the FastAPI server:
+
+```bash
+cd backend
+
+# Create and activate virtual environment
+python -m venv venv
+
+# Windows
+venv\Scripts\activate
+
+# Linux/Mac
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requeriments.txt
+
+# Start the server
+uvicorn app.main:app --reload
+```
+
+The backend will start on `http://127.0.0.1:8000`
+</Step>
+
+<Step title="Configure Environment Variables">
+Create a `.env` file in the backend directory:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file and add your OpenAI API key:
+
+```bash
+AI_PROVIDER=openai
+OPENAI_API_KEY=your_openai_api_key_here
+OPENAI_DEFAULT_CHAT_MODEL=gpt-4o
+```
+
+<Warning>
+Without an OpenAI API key, the AI Insights feature will not work. However, all other features including option chains, heatmaps, and strategy recommendations will function normally.
+</Warning>
+</Step>
+
+<Step title="Start the Frontend Client">
+Open a new terminal window and navigate to the frontend directory:
+
+```bash
+cd frontend
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173` (or another port shown in your terminal).
+</Step>
+
+<Step title="Access the Application">
+Open your browser and navigate to the URL shown in your terminal (typically `http://localhost:5173`).
+
+You should see the OptionStrat AI welcome screen with example tickers: AAPL, TSLA, NVDA, and SPY.
+</Step>
+
+</Steps>
+
+## Your First Strategy
+
+Now that OptionStrat AI is running, let's build your first options strategy!
+
+<Steps>
+
+<Step title="Load a Ticker">
+In the search box at the top right, type a ticker symbol (e.g., `AAPL`) and press **Enter**.
+
+The system will:
+- Fetch the current spot price from Yahoo Finance
+- Load all available expiration dates
+- Display the default option chain (closest expiration ≥7 days)
+
+<Note>
+Popular tickers include AAPL, TSLA, NVDA, SPY, MSFT, AMZN, and META. You can also click the quick-select buttons for instant access.
+</Note>
+</Step>
+
+<Step title="Build a Covered Call">
+A covered call is a popular strategy where you own 100 shares and sell a call option.
+
+1. **Add the stock position**: In the Strategy Builder panel, click **"+100 Acciones (Covered)"**
+2. **Sell a call**: In the option chain, find a strike price above the current price (e.g., 5-10% OTM)
+3. Click the **green BID price** in the CALL column to sell the call
+
+Your positions will appear in the "Opciones Activas" section.
+</Step>
+
+<Step title="View the Risk Profile">
+The **Heatmap** panel automatically updates to show your profit/loss across different scenarios:
+
+- **X-axis**: Underlying price changes (from -30% to +30%)
+- **Y-axis**: Days until expiration (time decay)
+- **Colors**: 
+  - Green = Profit
+  - Red = Loss
+  - Brighter colors = Higher magnitude
+
+Use the sliders to simulate:
+- **Volatility Shock**: Impact of IV changes (Vega risk)
+- **Days Forward**: Fast-forward to see theta decay
+
+<Note>
+The heatmap updates in real-time as you add or remove positions. You can have multiple legs including stocks, calls, and puts for complex spreads like Iron Condors or Butterflies.
+</Note>
+</Step>
+
+<Step title="Get AI Analysis">
+Click **"Analizar con IA"** in the AI Insights panel to get:
+
+- **Risk Score** (1-10 scale)
+- **Net Greeks** summary (Delta, Gamma, Theta, Vega)
+- **Quick Tips** for portfolio adjustments
+- **LLM Analysis** with contextual market sentiment from FinViz news and insider trading data
+
+The AI analyzes your complete portfolio and provides actionable insights based on:
+- Your net Greek exposures
+- Recent news sentiment (bullish/bearish/neutral)
+- Insider trading activity (C-suite buying/selling)
+- Analyst price targets
+</Step>
+
+<Step title="Explore Strategy Recommendations">
+Scroll down to the **Strategy Recommender** section to get AI-optimized strategies:
+
+1. Select your **market bias**: Bullish, Neutral, or Bearish
+2. Choose your **risk profile**:
+   - Conservative (~85% probability of profit)
+   - Balanced (~70% POP)
+   - Aggressive (~50% POP, higher premium)
+3. Set your DTE range (Days to Expiration)
+
+Click **"Recomendar Estrategias"** to get:
+- **Bull Put Spreads** (bullish/neutral)
+- **Iron Condors** (neutral, high-probability)
+- **Credit Spreads** (directional bets)
+
+Each recommendation shows expected credit, max profit/loss, and probability metrics.
+
+<Note>
+The recommender automatically filters out "zombie options" by requiring minimum volume (>10) and open interest (>50) for reliable execution.
+</Note>
+</Step>
+
+</Steps>
+
+## API Verification
+
+Want to verify the backend is working? Test the API endpoints:
+
+```bash
+# Health check
+curl http://127.0.0.1:8000/
+
+# Get available expirations for AAPL
+curl http://127.0.0.1:8000/api/options/expirations/AAPL
+
+# Get option chain for specific expiration
+curl "http://127.0.0.1:8000/api/options/chain/AAPL?expiration=2026-12-18"
+```
+
+Expected response for health check:
+
+```json
+{
+  "status": "ok",
+  "message": "OptionStrat Backend is running."
+}
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Installation Guide" icon="download" href="/installation">
+    Detailed setup instructions, troubleshooting, and system requirements
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore all available endpoints and their parameters
+  </Card>
+  <Card title="Strategy Builder" icon="chart-line" href="/features/option-builder">
+    Learn how to build complex multi-leg strategies
+  </Card>
+  <Card title="AI Insights" icon="brain" href="/features/ai-insights">
+    Understand how the AI analyzes your portfolio risk
+  </Card>
+</CardGroup>
+
+## Common Use Cases
+
+### Building a Protective Put
+1. Click "+100 Acciones (Covered)" to add stock
+2. Click the red ASK price on a PUT below current price
+3. View the limited downside risk in the heatmap
+
+### Creating an Iron Condor
+1. Use the Strategy Recommender with "neutral" bias
+2. Click "Cargar al Simulador" on a recommended Iron Condor
+3. View the profit zone in the heatmap (profits when underlying stays in range)
+
+### Analyzing Theta Decay
+1. Build any credit spread (sell options)
+2. Move the "Days Forward" slider to see profit increase over time
+3. Check the "Net Theta" in AI Insights to see daily profit from time decay
+
+<Warning>
+**Risk Disclaimer**: OptionStrat AI is for educational and analytical purposes only. Options trading involves substantial risk of loss. Always paper trade and consult a licensed financial advisor before trading real capital.
+</Warning>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card title="Troubleshooting" icon="wrench" href="/installation#troubleshooting">
+    Common issues and solutions
+  </Card>
+  <Card title="GitHub Issues" icon="github" href="https://github.com">
+    Report bugs or request features
+  </Card>
+</CardGroup>

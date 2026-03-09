@@ -1,0 +1,401 @@
+---
+title: 'Using the AI Analyst'
+description: 'Get intelligent strategy analysis combining Greeks, market data, and AI insights'
+icon: 'brain'
+---
+
+# Using the AI Analyst
+
+The AI Analyst is your personal options advisor - it combines mathematical risk metrics (Greeks) with live market data (sentiment, fundamentals, insider trading) to evaluate your strategy.
+
+<Note>
+The AI Analyst uses LLMs (GPT-4 or OpenRouter models) to provide natural language analysis. It receives **Position Greeks** (total USD exposure), market context, and your strategy details to generate actionable insights.
+</Note>
+
+## How the AI Analyst Works
+
+The system follows a three-stage analysis pipeline:
+
+<Steps>
+  <Step title="Calculate Mathematical Risk">
+    The platform computes Position Greeks using Black-Scholes:
+    - **Delta:** Directional exposure in USD
+    - **Gamma:** Acceleration risk
+    - **Theta:** Daily time decay in USD  
+    - **Vega:** Volatility sensitivity
+    
+    These are already multiplied by 100 (contract size) and quantity.
+  </Step>
+  
+  <Step title="Gather Market Context">
+    The system fetches live market data:
+    - Current spot price and analyst targets
+    - VADER sentiment score from news/social media
+    - Fundamental metrics (P/E, recommendations)
+    - Insider trading flow (purchases vs. sales)
+  </Step>
+  
+  <Step title="LLM Strategic Analysis">
+    The AI receives:
+    - Your strategy details (legs, strikes, expirations)
+    - Position Greeks (not per-contract Greeks)
+    - Market context data
+    - Volume/Open Interest for liquidity assessment
+    
+    It generates a 2-paragraph analysis evaluating:
+    - Strategy fit vs. market sentiment
+    - Risk metrics vs. conviction level  
+    - Liquidity concerns
+    - Probability assessment
+  </Step>
+</Steps>
+
+## Accessing the AI Analyst
+
+The AI Insights panel is on the right side of the interface with three tabs:
+
+### Tab 1: IA & Riesgo (AI & Risk)
+
+This is where you get your AI analysis and risk metrics.
+
+<Accordion title="Risk Score (1-10)">
+  A danger meter that quantifies your position risk:
+  
+  **Score Components:**
+  - Base score: 5 (neutral)
+  - Heavy theta decay (< -20): +2 points
+  - High directional leverage (|Δ| > 50): +1 point
+  - Severe negative gamma (< -10): +3 points
+  - Positive theta (> 20): -1 point
+  
+  **Interpretation:**
+  - **1-3:** Low risk, conservative strategy
+  - **4-6:** Moderate risk, standard defined risk trades  
+  - **7-8:** High risk, significant theta or gamma exposure
+  - **9-10:** Extreme risk, potential for rapid losses
+  
+  <Warning>
+  Risk scores above 7 require smaller position sizes (1-2% of account max) and tight stop losses.
+  </Warning>
+</Accordion>
+
+<Accordion title="Position Greeks Display">
+  Always-visible grid showing net exposure:
+  
+  ```
+  Δ Delta: +16.09     Γ Gamma: -2.45
+  Θ Theta: +12.30/day V Vega: -8.75
+  ```
+  
+  **Color coding:**
+  - Delta: Green if positive (bullish), red if negative (bearish)
+  - Gamma: Red if negative (dangerous)
+  - Theta: Green if positive (earning), red if negative (bleeding)
+  - Vega: White (informational)
+  
+  See [Understanding Greeks](/guides/understanding-greeks) for deep dive.
+</Accordion>
+
+<Accordion title="Quick Tips">
+  Automatic alerts based on Greek thresholds:
+  
+  **Theta Alert:**
+  > "ALERTA: Riesgo de Theta acelerado. Pierdes $22.50/dia."
+  
+  → Your negative theta is draining value quickly
+  
+  **Delta Alert:**  
+  > "Cartera apalancada: Alcista (Delta +68.20)."
+  
+  → High bullish exposure, significant directional risk
+  
+  **Gamma Alert:**
+  > "ALERTA: Gamma negativo severo (Riesgo agudo de volatilidad)."
+  
+  → Rapid loss potential from price swings
+  
+  **Positive Theta:**
+  > "Ingresas $18.50/dia por primas desgastadas (Theta positiva)."
+  
+  → Earning daily income from time decay
+</Accordion>
+
+### Requesting AI Analysis
+
+Click the **"🤖 Evaluacion Estrategica Global"** button to trigger the LLM analysis.
+
+<Steps>
+  <Step title="Build Your Strategy First">
+    The AI needs at least one option leg to analyze. Add your positions using the Strategy Builder.
+    
+    <Tip>
+    Wait until your strategy is complete before requesting analysis. Making changes after will require re-running the AI.
+    </Tip>
+  </Step>
+  
+  <Step title="Click the Analysis Button">
+    The button shows "⏳ Consultando Analista..." while processing (typically 5-15 seconds).
+    
+    The system:
+    - Calculates fresh Greeks for current state
+    - Bundles market context
+    - Calls LiteLLM API with full context
+    - Streams response back to UI
+  </Step>
+  
+  <Step title="Read the Extended Analysis">
+    A new panel appears with "Analisis Extendido IA" containing:
+    - Strategy assessment vs. market sentiment
+    - Risk evaluation against volatility conditions
+    - Liquidity concerns (volume/OI analysis)  
+    - Probabilistic outlook
+    
+    The analysis is limited to 2 concise paragraphs in fluent Spanish.
+  </Step>
+</Steps>
+
+<Warning>
+The AI analysis is based on current market data and mathematical projections. It is NOT financial advice. Always do your own research and never risk more than you can afford to lose.
+</Warning>
+
+## Understanding AI Analysis Output
+
+The LLM is prompted to analyze three critical dimensions:
+
+### 1. Strategy vs. Sentiment Alignment
+
+The AI crosses your directional bias (delta) against market sentiment:
+
+**Example bullish strategy (Delta +45):**
+> "La estrategia alcista con delta positivo de +45 se alinea bien con el sentimiento de mercado actual (VADER +0.18, Bullish). Los analistas mantienen un target de $520, un 4% por encima del spot actual de $500, lo que respalda la tesis direccional."
+
+**Example bearish strategy with bullish sentiment:**  
+> "Cuidado: tu delta negativo (-38) apuesta a una caída, pero el sentimiento algorítmico es fuertemente alcista (+0.22). Los insiders han realizado 8 compras recientes vs. solo 2 ventas, señal contraria a tu posición."
+
+### 2. Risk Metrics vs. Conviction
+
+The AI evaluates if your Greek exposure matches the strength of market signals:
+
+**High conviction + high risk:**
+> "El gamma negativo de -15 implica riesgo severo ante movimientos bruscos. Sin embargo, la baja volatilidad actual (VIX 16) y un rango consolidado en el precio justifican la exposición si mantienes stops ajustados en $495 y $510."
+
+**Low conviction + high risk:**
+> "ALERTA: Theta de -28 USD/día con un sentimiento neutral (VADER -0.02) es peligroso. Estás pagando alta prima sin una tesis direccional clara. Considera reducir tamaño o cambiar a spreads con theta positiva."
+
+### 3. Liquidity and Execution Concerns
+
+The AI checks volume and open interest of your legs:
+
+**Good liquidity:**
+> "Liquidez excelente: el call $510 muestra volumen de 450 contratos y OI de 2,800. Entrada y salida serán fluidas con spreads ajustados."
+
+**Poor liquidity:**
+> "RIESGO DE LIQUIDEZ: el put $485 tiene apenas 12 contratos de volumen y 80 de OI. Spreads bid-ask amplios dificultarán el cierre de la posición. Considera strikes con mayor actividad."
+
+## Tab 2: Contexto (Fundamental Data)
+
+This tab displays fundamental metrics fetched from Yahoo Finance:
+
+<Tabs>
+  <Tab title="Company Overview">
+    - **Symbol:** Ticker identifier
+    - **Business Summary:** Brief description of operations
+    - **Spot Price:** Current market price
+    - **Recommendation:** Analyst consensus (Buy, Hold, Sell)
+  </Tab>
+  
+  <Tab title="Valuation Metrics">
+    - **Target Mean:** Average analyst price target
+    - **P/E Forward:** Forward price-to-earnings ratio
+    - **Market Cap:** Total company valuation
+    
+    Use these to assess if options are priced reasonably vs. fundamental value.
+  </Tab>
+</Tabs>
+
+**Example Context:**
+
+```
+SPY Fundamentals
+S&P 500 ETF Trust tracking the broad US equity market.
+
+Spot: $500.25
+Recommendation: Buy
+Target Mean: $520.00
+P/E Forward: 21.3
+```
+
+**Interpretation:** Analysts are bullish (target 4% higher), valuation is normal (P/E ~21). Supports moderately bullish strategies.
+
+## Tab 3: Sentimiento (Sentiment Analysis)
+
+This tab shows algorithmic sentiment and insider trading data:
+
+<Accordion title="VADER Sentiment Score">
+  A compound score from -1 (extreme bearish) to +1 (extreme bullish) based on:
+  - Recent news headlines (15-day window)
+  - Social media mentions
+  - Article tone analysis
+  
+  **Thresholds:**
+  - **< -0.05:** Bearish sentiment
+  - **-0.05 to +0.05:** Neutral sentiment  
+  - **> +0.05:** Bullish sentiment
+  
+  **Visual:** Circular badge with color coding:
+  - Red: Bearish
+  - Orange: Neutral
+  - Green: Bullish
+</Accordion>
+
+<Accordion title="Recent News Headlines">
+  Up to 4 recent headlines used in sentiment calculation:
+  
+  > "Fed signals rate cuts may come sooner than expected"  
+  > "Tech earnings beat expectations, driving market rally"  
+  > "Inflation data comes in cooler, boosting investor confidence"
+  
+  These provide context for the VADER score.
+</Accordion>
+
+<Accordion title="Insider Trading Flow">
+  Corporate insider activity over recent months:
+  
+  **Insider Purchases:** Number of buying transactions  
+  **Insider Sales:** Number of selling transactions
+  
+  **Interpretation:**
+  - More purchases than sales: Bullish signal (insiders confident)
+  - More sales than purchases: Bearish signal (insiders cashing out)  
+  - Balanced: Neutral
+  
+  **Top Insiders:** Details on largest transactions:
+  - Name and position
+  - Shares traded (+ for buy, - for sell)
+  
+  <Warning>
+  Insider selling isn't always bearish - executives often sell for tax/diversification. Look for unusual patterns (multiple insiders selling simultaneously).
+  </Warning>
+</Accordion>
+
+## Interpreting Combined Signals
+
+The AI Analyst's power comes from synthesizing all data sources:
+
+### Bullish Alignment Example
+
+**Your Strategy:** Bull call spread (Delta +32)  
+**Market Signals:**
+- VADER Sentiment: +0.18 (Bullish)
+- Analyst Target: $520 (4% upside)  
+- Insiders: 8 purchases, 2 sales
+- Volume: High liquidity
+
+**AI Output:**
+> "Estrategia bien construida. El sesgo alcista (delta +32) coincide con el sentimiento positivo del mercado (+0.18) y el flujo de insiders (8 compras). El spread call limita riesgo mientras permite capturar el movimiento hacia el target de $520. Theta controlado en -8 USD/día es manejable dado el horizonte de 28 días. Probabilidad favorable si el precio supera $505 en 2 semanas."
+
+### Bearish Conflict Example
+
+**Your Strategy:** Iron condor (neutral, Delta +2)  
+**Market Signals:**
+- VADER Sentiment: +0.28 (Strong Bullish)
+- Analyst Target: $530 (6% upside)
+- Insiders: 12 purchases, 1 sale  
+- Recent breakout from consolidation
+
+**AI Output:**
+> "ALERTA: Tu estrategia neutral (iron condor) enfrenta riesgo de tendencia alcista fuerte. Sentimiento +0.28 y 12 compras de insiders sugieren momentum ascendente que puede testear tu call corto en $510. Aunque tienes theta positivo (+18 USD/día), el gamma negativo (-12) amplificará pérdidas si el precio rompe $505. Considera cerrar el lado call o ampliar strikes."
+
+## Best Practices for AI Analysis
+
+<Steps>
+  <Step title="Build Complete Strategies">
+    Add all legs before requesting analysis. Partial strategies generate incomplete insights.
+  </Step>
+  
+  <Step title="Cross-Reference Tabs">
+    Don't just read the AI output. Check:
+    - Fundamentals (Tab 2): Do analysts support your direction?
+    - Sentiment (Tab 3): Is news flow aligned or conflicting?
+    - Greeks (Tab 1): Are risk metrics acceptable?
+  </Step>
+  
+  <Step title="Update After Major Events">
+    Re-run analysis after:
+    - Earnings releases
+    - Fed announcements  
+    - Major news events
+    - Significant price moves
+    
+    Market context changes rapidly - stale analysis is dangerous.
+  </Step>
+  
+  <Step title="Use as Confirmation, Not Conviction">
+    The AI validates YOUR thesis. If the AI says "high risk" and you disagree, maybe you're missing something. But if the AI says "looks good" and you're uncertain, it's not a green light to overlarge.
+  </Step>
+</Steps>
+
+## Common AI Warnings to Heed
+
+<Warning>
+**"Gamma negativo severo"**  
+Don't ignore this. Negative gamma causes non-linear losses. Keep positions small and set stops.
+</Warning>
+
+<Warning>
+**"Riesgo de liquidez"**  
+Illiquid options cost you money on both entry and exit. If the AI flags low volume/OI, choose different strikes.
+</Warning>
+
+<Warning>
+**"Sentimiento contrario a tu posición"**  
+Fighting market sentiment is possible but requires strong conviction and tight risk management. The AI is telling you the odds are against you.
+</Warning>
+
+## Limitations of AI Analysis
+
+<Note>
+**What the AI cannot predict:**
+- Black swan events (sudden crashes, geopolitical shocks)
+- Earning surprises (better/worse than expected)
+- Fed policy pivots (surprise rate changes)  
+- Market manipulation or unusual activity
+- Your personal risk tolerance and account size
+
+Always apply human judgment and proper risk management regardless of AI output.
+</Note>
+
+## Advanced: Understanding the Prompt
+
+The LLM receives a structured prompt:
+
+**System Role:**
+> "You are a Senior Options Analyst. The data shows **Position Greeks (Total USD)**, already multiplied by 100 × quantity. A Delta of +16.09 means the entire position gains $16.09 per $1 stock move."
+
+**Analysis Rules:**
+1. Cross live market data (sentiment, analyst targets, insiders) with option liquidity (volume/OI)
+2. Explain if the strategy makes mathematical sense vs. current sentiment
+3. Limit to 2 impactful paragraphs in fluent Spanish
+
+This ensures the AI:
+- Interprets Greeks correctly (total position, not per contract)
+- Focuses on actionable insights (not generic advice)
+- Maintains conciseness (no walls of text)
+
+## Pro Tips
+
+1. **Run analysis multiple times** as you adjust strikes/expirations to compare risk profiles
+2. **Save AI output** to a notes file for post-trade review (learn from predictions)
+3. **Compare AI sentiment to your own research** - if you see something the AI doesn't, investigate deeper
+4. **Pay attention to Quick Tips** - these are hard-coded thresholds based on decades of options trading wisdom
+5. **Use AI for education** - the explanations teach you to spot these patterns yourself over time
+
+## Next Steps
+
+- Review [Understanding Greeks](/guides/understanding-greeks) to interpret the metrics the AI references  
+- Use the [Payoff Simulator](/guides/interpreting-heatmaps) to visualize the scenarios the AI warns about
+- Apply [Risk Management](/guides/risk-management) based on AI-identified risk scores and warnings
+
+<Tip>
+The best traders use AI as a sanity check, not a decision-maker. Build your conviction through research, then validate it with AI analysis. If they align, you have a high-probability trade.
+</Tip>

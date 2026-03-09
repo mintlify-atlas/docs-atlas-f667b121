@@ -1,0 +1,305 @@
+---
+title: 'OptionLeg'
+description: 'Individual option or stock position within a strategy'
+---
+
+## Overview
+
+The `OptionLeg` model represents a single position (leg) within an options strategy. Each leg can be a call option, put option, or stock position, and can be either bought or sold.
+
+Legs are combined in the [StrategyState](/api/models/strategy-state) model to create complex multi-leg strategies like spreads, condors, straddles, and more.
+
+## Model Structure
+
+<ParamField path="type" type="string" required>
+  Type of the position. Must be one of: `"call"`, `"put"`, or `"stock"`
+  
+  - **call** - Call option (right to buy at strike)
+  - **put** - Put option (right to sell at strike)
+  - **stock** - Underlying stock position
+  
+  **Pattern:** `^(call|put|stock)$`
+</ParamField>
+
+<ParamField path="action" type="string" required>
+  Whether you are buying or selling this position. Must be one of: `"buy"` or `"sell"`
+  
+  - **buy** - Long position (you pay premium for options)
+  - **sell** - Short position (you receive premium for options)
+  
+  **Pattern:** `^(buy|sell)$`
+</ParamField>
+
+<ParamField path="strike" type="float" required>
+  Strike price of the option (or entry price for stock). Must be greater than 0.
+  
+  For options, this is the exercise price. For stock, this represents the purchase/sale price.
+  
+  **Example:** `150.00` for a $150 strike call
+</ParamField>
+
+<ParamField path="expiration" type="date" required>
+  Expiration date of the option in ISO 8601 format (YYYY-MM-DD).
+  
+  For stock positions, this can be set to a far future date since stock doesn't expire.
+  
+  **Example:** `"2026-04-17"` for April 17, 2026 expiration
+</ParamField>
+
+<ParamField path="qty" type="integer" required>
+  Number of contracts (for options) or shares (for stock). Must be greater than 0.
+  
+  **Important:** For options, 1 contract = 100 shares of the underlying asset.
+  
+  **Examples:**
+  - `1` - One option contract (controls 100 shares)
+  - `5` - Five option contracts (controls 500 shares)
+  - `100` - For stock, 100 shares
+</ParamField>
+
+<ParamField path="premium" type="float" default="0.0">
+  Premium paid (for buy) or received (for sell) per contract/share. Must be non-negative.
+  
+  For options, this is the option price. For stocks, it can represent dividends or be left at 0.
+  
+  **Examples:**
+  - `3.50` - $3.50 premium per share ($350 total for 1 contract)
+  - `0.0` - No premium data or stock position
+</ParamField>
+
+<ParamField path="volume" type="integer" optional default="0">
+  Trading volume of the option contract. Used for liquidity analysis.
+  
+  Higher volume generally indicates better liquidity and tighter bid-ask spreads.
+</ParamField>
+
+<ParamField path="open_interest" type="integer" optional default="0">
+  Open interest for the option contract. Indicates the number of outstanding contracts.
+  
+  Higher open interest suggests more active trading and better price discovery.
+</ParamField>
+
+## Example Positions
+
+### Long Call Option
+
+```json
+{
+  "type": "call",
+  "action": "buy",
+  "strike": 155.0,
+  "expiration": "2026-04-17",
+  "qty": 1,
+  "premium": 3.50,
+  "volume": 1250,
+  "open_interest": 8420
+}
+```
+
+This represents:
+- Buying 1 call option contract
+- Strike price of $155
+- Expires April 17, 2026
+- Paid $3.50 per share ($350 total)
+- High liquidity (good volume and open interest)
+
+### Short Put Option
+
+```json
+{
+  "type": "put",
+  "action": "sell",
+  "strike": 145.0,
+  "expiration": "2026-04-17",
+  "qty": 2,
+  "premium": 4.20,
+  "volume": 890,
+  "open_interest": 3210
+}
+```
+
+This represents:
+- Selling 2 put option contracts
+- Strike price of $145
+- Expires April 17, 2026
+- Received $4.20 per share ($840 total for 2 contracts)
+- Moderate liquidity
+
+### Stock Position
+
+```json
+{
+  "type": "stock",
+  "action": "buy",
+  "strike": 150.50,
+  "expiration": "2030-12-31",
+  "qty": 100,
+  "premium": 0.0
+}
+```
+
+This represents:
+- Buying 100 shares of stock
+- At $150.50 per share
+- Far future expiration (stock doesn't expire)
+- No premium (stock purchase, not option)
+
+## Common Strategy Examples
+
+### Bull Call Spread
+
+```json
+{
+  "legs": [
+    {
+      "type": "call",
+      "action": "buy",
+      "strike": 150.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 5.00
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 155.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 2.50
+    }
+  ]
+}
+```
+
+### Protective Put
+
+```json
+{
+  "legs": [
+    {
+      "type": "stock",
+      "action": "buy",
+      "strike": 150.0,
+      "expiration": "2030-12-31",
+      "qty": 100,
+      "premium": 0.0
+    },
+    {
+      "type": "put",
+      "action": "buy",
+      "strike": 145.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 3.00
+    }
+  ]
+}
+```
+
+### Iron Condor (4 legs)
+
+```json
+{
+  "legs": [
+    {
+      "type": "put",
+      "action": "buy",
+      "strike": 140.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 2.50
+    },
+    {
+      "type": "put",
+      "action": "sell",
+      "strike": 145.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 4.20
+    },
+    {
+      "type": "call",
+      "action": "sell",
+      "strike": 155.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 4.10
+    },
+    {
+      "type": "call",
+      "action": "buy",
+      "strike": 160.0,
+      "expiration": "2026-04-17",
+      "qty": 1,
+      "premium": 2.40
+    }
+  ]
+}
+```
+
+## Field Validation
+
+<ResponseField name="type" type="string">
+  ✅ Must be exactly: `"call"`, `"put"`, or `"stock"`
+  
+  ❌ Case-sensitive - `"Call"` or `"CALL"` will be rejected
+</ResponseField>
+
+<ResponseField name="action" type="string">
+  ✅ Must be exactly: `"buy"` or `"sell"`
+  
+  ❌ Case-sensitive - `"Buy"` or `"SELL"` will be rejected
+</ResponseField>
+
+<ResponseField name="strike" type="float">
+  ✅ Must be greater than 0
+  
+  ❌ Negative or zero values will be rejected
+</ResponseField>
+
+<ResponseField name="expiration" type="date">
+  ✅ Must be in ISO 8601 format: `YYYY-MM-DD`
+  
+  ❌ Invalid date formats will be rejected
+  
+  **Valid:** `"2026-04-17"`
+  
+  **Invalid:** `"04/17/2026"`, `"2026-4-17"`
+</ResponseField>
+
+<ResponseField name="qty" type="integer">
+  ✅ Must be greater than 0
+  
+  ❌ Negative or zero quantities will be rejected
+</ResponseField>
+
+<ResponseField name="premium" type="float">
+  ✅ Must be non-negative (>= 0)
+  
+  ❌ Negative premiums will be rejected
+</ResponseField>
+
+## Understanding Contract Multiplier
+
+When calculating position value:
+- **Options:** Value = qty × premium × 100
+- **Stock:** Value = qty × strike
+
+### Example Calculations:
+
+**Long Call:**
+- qty = 1, premium = 3.50
+- Cost = 1 × 3.50 × 100 = **$350**
+
+**Short Put:**
+- qty = 2, premium = 4.20
+- Credit = 2 × 4.20 × 100 = **$840**
+
+**Stock Position:**
+- qty = 100, strike = 150.50
+- Cost = 100 × 150.50 = **$15,050**
+
+## Related Models
+
+- [StrategyState](/api/models/strategy-state) - Complete strategy configuration
+- [Greeks](/api/models/greeks) - Risk metrics calculated from option legs

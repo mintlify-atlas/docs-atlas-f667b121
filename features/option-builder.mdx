@@ -1,0 +1,192 @@
+---
+title: "Option Strategy Builder"
+description: "Build complex multi-leg option strategies with real-time pricing and a unified T-quote chain interface"
+---
+
+## Overview
+
+The Option Strategy Builder is the core workspace where you construct and manage your option positions. It features a professional T-quote style interface that displays calls and puts side-by-side, making it easy to build spreads, straddles, iron condors, and any custom multi-leg strategy.
+
+<CardGroup cols={2}>
+  <Card title="Real-Time Pricing" icon="chart-line">
+    Live bid/ask spreads from market data with volume and open interest metrics
+  </Card>
+  <Card title="Multi-Leg Support" icon="layer-group">
+    Build strategies with unlimited legs including stocks, calls, and puts
+  </Card>
+  <Card title="Multiple Expirations" icon="calendar">
+    Switch between all available expiration dates for the underlying ticker
+  </Card>
+  <Card title="Smart Strike Selection" icon="crosshairs">
+    Automatically displays the 10 strikes closest to the current spot price
+  </Card>
+</CardGroup>
+
+## Building Your First Strategy
+
+### 1. Select a Ticker
+
+Enter a ticker symbol in the main search bar to load the option chain. The system will automatically fetch:
+- Current spot price
+- All available expiration dates
+- Option chain with Greeks, volume, and open interest
+
+<Note>
+The builder displays the 10 strikes closest to the spot price for optimal visibility. You can switch expiration dates to access different strike ranges.
+</Note>
+
+### 2. Understanding the T-Quote Layout
+
+The option chain uses a professional T-quote format:
+
+```
+[CALL BID] [CALL ASK] [V/OI] [STRIKE] [V/OI] [PUT BID] [PUT ASK]
+```
+
+- **Left side**: Call options (green bid buttons, red ask buttons)
+- **Center**: Strike price
+- **Right side**: Put options (green bid buttons, red ask buttons)
+- **V/OI**: Volume (top) and Open Interest (bottom)
+
+### 3. Adding Legs to Your Strategy
+
+<Steps>
+  <Step title="Click to Add">
+    Click any **Bid** button to SELL that option (credit)
+    
+    Click any **Ask** button to BUY that option (debit)
+  </Step>
+  
+  <Step title="Review Active Positions">
+    Your active legs appear in the "Opciones Activas" section above the chain
+    
+    Each leg shows:
+    - Action (BUY/SELL)
+    - Quantity
+    - Type (CALL/PUT/STOCK)
+    - Strike price
+    - Premium
+    - Expiration date
+  </Step>
+  
+  <Step title="Remove Legs">
+    Click the **✕** button on any active leg to remove it from your strategy
+  </Step>
+</Steps>
+
+### 4. Adding Stock Positions
+
+For covered calls or protective strategies, use the stock buttons:
+
+- **+100 Acciones (Covered)**: Adds 100 shares long at the current spot price
+- **-100 Acciones (Short)**: Adds 100 shares short at the current spot price
+
+<Tip>
+Covered calls are popular strategies that combine 100 shares long with 1 short call option. Use the +100 Acciones button, then sell an OTM call.
+</Tip>
+
+## Advanced Features
+
+### Multiple Expirations
+
+The expiration dropdown displays all available dates for the ticker. When you change the expiration:
+
+1. The option chain reloads automatically
+2. New Greeks and pricing are calculated
+3. Your existing legs remain unchanged (they retain their original expirations)
+
+<Warning>
+Each leg can have a different expiration date, allowing you to build calendar spreads and diagonal strategies.
+</Warning>
+
+### Volume and Open Interest
+
+Each strike displays volume and open interest metrics:
+
+- **Volume**: Number of contracts traded today (white text)
+- **Open Interest**: Total open contracts (gray text)
+
+<Note>
+Higher volume and open interest typically indicate better liquidity and tighter bid-ask spreads.
+</Note>
+
+### Understanding Bid/Ask Colors
+
+- **Green buttons (Bid)**: SELL options - you receive premium (credit)
+- **Red buttons (Ask)**: BUY options - you pay premium (debit)
+
+The color coding helps you quickly identify whether you're entering a credit or debit position.
+
+## Common Strategy Examples
+
+### Bull Put Spread (Bullish, Credit)
+
+1. Find a put strike below the current price
+2. Click the **Bid** button to SELL the put (receive premium)
+3. Find a lower put strike as protection
+4. Click the **Ask** button to BUY that put (pay premium)
+5. Net result: You receive a credit
+
+### Iron Condor (Neutral, Credit)
+
+1. Build a Bull Put Spread below the current price
+2. Build a Bear Call Spread above the current price
+3. All four legs should have the same expiration
+4. Net result: You receive a credit from both spreads
+
+### Long Straddle (Volatility Play, Debit)
+
+1. Select an ATM strike (near the spot price)
+2. Click the **Ask** button on the CALL to BUY it
+3. Click the **Ask** button on the PUT (same strike) to BUY it
+4. Net result: You pay a debit, profit from large moves in either direction
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Check Liquidity" icon="droplet">
+    Look for strikes with decent volume and open interest to ensure you can exit the position
+  </Card>
+  <Card title="Mind the Spread" icon="arrows-left-right">
+    Wide bid-ask spreads increase your cost. Favor strikes with tighter spreads
+  </Card>
+  <Card title="Use Expiration Wisely" icon="hourglass">
+    Shorter expirations have faster theta decay. Longer expirations give more time for your thesis to play out
+  </Card>
+  <Card title="Review All Legs" icon="list-check">
+    Double-check each leg before moving to simulation. One wrong click can flip your entire risk profile
+  </Card>
+</CardGroup>
+
+## What Happens Next?
+
+Once you've built your strategy:
+
+1. The **Payoff Simulator** automatically calculates profit/loss across price ranges
+2. The **AI Insights** panel evaluates your Greeks and risk metrics
+3. You can adjust parameters like volatility shock and days to expiration
+
+<Tip>
+Start simple with 2-leg spreads before building complex 4+ leg strategies. Master the basics first.
+</Tip>
+
+## Keyboard Shortcuts
+
+While the Builder is focused:
+
+- Arrow keys navigate through strikes
+- Tab cycles between calls and puts
+- ESC clears the active strategy
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Simulate Your Strategy" href="/features/heatmap-simulator" icon="chart-area">
+    Visualize profit/loss with the Payoff Simulator
+  </Card>
+  <Card title="Get AI Analysis" href="/features/ai-insights" icon="brain">
+    Understand your Greeks and risk exposure
+  </Card>
+</CardGroup>

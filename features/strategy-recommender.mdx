@@ -1,0 +1,516 @@
+---
+title: "Strategy Optimizer"
+description: "Discover high-probability option strategies tailored to your market bias and risk profile"
+---
+
+## Overview
+
+The Strategy Optimizer is an intelligent recommendation engine that scans the entire option chain to find mathematically optimal strategies based on your directional bias and risk tolerance. It uses delta-targeting algorithms to construct spreads with built-in edge.
+
+<CardGroup cols={2}>
+  <Card title="Three Directional Modes" icon="compass">
+    Bullish, Neutral, or Bearish strategy generation
+  </Card>
+  <Card title="Risk Profile Matching" icon="shield-halved">
+    Conservative (~85% POP), Balanced (~80% POP), or Aggressive (~70% POP)
+  </Card>
+  <Card title="Instant Metrics" icon="calculator">
+    Net premium, max loss, margin requirements, and ROC for each strategy
+  </Card>
+  <Card title="One-Click Loading" icon="bolt">
+    Send any recommended strategy directly to the simulator
+  </Card>
+</CardGroup>
+
+## How It Works
+
+The optimizer uses a **delta-targeting algorithm** to construct strategies with specific probability characteristics:
+
+1. **Scans the option chain** for strikes with target delta values
+2. **Constructs defined-risk spreads** (vertical spreads, iron condors)
+3. **Calculates key metrics** (premium, max loss, ROC)
+4. **Ranks results** by return on capital (ROC)
+
+<Note>
+The optimizer focuses on "Theta Gang" strategies - high-probability trades that collect premium and benefit from time decay.
+</Note>
+
+## Setting Your Parameters
+
+### Directional Bias
+
+Choose your market outlook:
+
+<Tabs>
+  <Tab title="🟢 Bullish">
+    **Best for**: Expecting the stock to rise or stay above current levels
+    
+    **Generates**:
+    - Bull Put Spreads (credit spreads below current price)
+    
+    **Characteristics**:
+    - Profit if stock rises or stays flat
+    - Short put strike acts as support level
+    - Defined risk, credit received upfront
+  </Tab>
+  
+  <Tab title="🟡 Neutral">
+    **Best for**: Expecting the stock to stay in a range
+    
+    **Generates**:
+    - Iron Condors (symmetrical range-bound strategy)
+    - Short Strangles (for aggressive profiles only)
+    
+    **Characteristics**:
+    - Profit if stock stays between short strikes
+    - Two wings provide defined risk
+    - Maximum credit collection
+  </Tab>
+  
+  <Tab title="🔴 Bearish">
+    **Best for**: Expecting the stock to fall or stay below current levels
+    
+    **Generates**:
+    - Bear Call Spreads (credit spreads above current price)
+    
+    **Characteristics**:
+    - Profit if stock falls or stays flat
+    - Short call strike acts as resistance level
+    - Defined risk, credit received upfront
+  </Tab>
+</Tabs>
+
+### Risk Profile
+
+Select your risk tolerance and target probability of profit (POP):
+
+| Profile | Target POP | Sell Delta | Wing Width | Best For |
+|---------|-----------|------------|------------|----------|
+| **Conservative** | ~85% | 0.15 | 5 points | Capital preservation, steady income |
+| **Balanced** | ~80% | 0.20 | 10 points | Standard Theta Gang approach |
+| **Aggressive** | ~70% | 0.30 | 15 points | Higher returns, accept more risk |
+
+<Tip>
+Sell delta of 0.20 means the short strike has roughly a 20% chance of being ITM at expiration, giving you an ~80% probability of profit.
+</Tip>
+
+**Wing Width** determines the distance between your short and long strikes:
+- **Narrower wings (5 pts)**: Less capital at risk, lower credit, higher POP
+- **Wider wings (15 pts)**: More capital at risk, higher credit, lower POP
+
+## Understanding the Results
+
+Each recommended strategy displays:
+
+### Strategy Card Components
+
+**Header Section**:
+- **Strategy Name**: Bull Put Spread, Iron Condor, Bear Call Spread, etc.
+- **Sentiment Badge**: Color-coded directional bias (green/bullish, yellow/neutral, red/bearish)
+
+**Legs Section**:
+Each leg shows:
+```
+SELL CALL $105 @ $2.35 | 2026-04-18
+BUY CALL $110 @ $1.20 | 2026-04-18
+```
+
+- **Action**: SELL (receive credit) or BUY (pay debit)
+- **Type**: CALL or PUT
+- **Strike**: Dollar strike price
+- **Premium**: Price per contract
+- **Expiration**: Date of expiration
+
+**Metrics Grid**:
+
+#### Net Premium
+
+**What it is**: Total credit received when opening the strategy
+
+```
+Example: $150.00
+Meaning: You receive $150 to open this position
+```
+
+Net premium is always positive for the strategies generated (credit strategies).
+
+<Note>
+Net premium represents your max profit on credit spreads and iron condors, achieved if the stock stays in the profit zone through expiration.
+</Note>
+
+#### Max Loss
+
+**What it is**: Maximum capital at risk
+
+```
+Formula: (Wing Width × 100) - Net Premium
+
+Example: 
+Bull Put Spread: $5 wide
+Net Premium: $150
+Max Loss: ($5 × 100) - $150 = $350
+```
+
+This is the most you can lose if the trade goes completely against you.
+
+#### ROC (Return on Capital)
+
+**What it is**: Return on capital percentage
+
+```
+Formula: (Net Premium / Max Loss) × 100
+
+Example:
+Net Premium: $150
+Max Loss: $350
+ROC: ($150 / $350) × 100 = 42.9%
+```
+
+<Tip>
+ROC is the key ranking metric. A 30-50% ROC over 30-45 days is considered excellent for Theta Gang strategies.
+</Tip>
+
+**ROC Benchmarks**:
+- **< 20%**: Low return, may not be worth the risk
+- **20-35%**: Good return for conservative strategies
+- **35-50%**: Excellent return for balanced strategies
+- **> 50%**: Very high return (check if risk is appropriate)
+
+### Strategy Ranking
+
+The optimizer automatically sorts results by ROC (highest first):
+
+```
+1. Bull Put Spread - 48% ROC
+2. Bull Put Spread - 42% ROC  
+3. Bull Put Spread - 35% ROC
+```
+
+Higher ROC strategies offer better capital efficiency, but verify the strikes make sense for your thesis.
+
+## Using the Optimizer
+
+<Steps>
+  <Step title="Load a Ticker">
+    Enter a ticker symbol and load the option chain in the main application
+  </Step>
+  
+  <Step title="Set Your Bias">
+    Click one of the three directional buttons: 🟢 Alcista, 🟡 Neutral, or 🔴 Bajista
+  </Step>
+  
+  <Step title="Choose Risk Profile">
+    Select Conservative, Balanced, or Aggressive from the dropdown
+  </Step>
+  
+  <Step title="Search for Strategies">
+    Click the "Buscar Estrategias" button to run the optimizer
+  </Step>
+  
+  <Step title="Review Results">
+    The optimizer displays all viable strategies ranked by ROC
+  </Step>
+  
+  <Step title="Load to Simulator">
+    Click "⚡ Llevar a Simulator" on any strategy to load all legs instantly
+  </Step>
+</Steps>
+
+<Note>
+The optimizer runs in 1-2 seconds and returns all strategies that meet your criteria. You can load any strategy to the simulator with a single click.
+</Note>
+
+## Strategy Deep Dives
+
+### Bull Put Spread (Bullish)
+
+**Structure**:
+```
+SELL PUT $95 (higher strike, closer to current price)
+BUY PUT $90 (lower strike, protection)
+```
+
+**Optimal Conditions**:
+- Bullish bias on the underlying
+- Support level near the short put strike
+- High IV (you benefit from selling expensive premium)
+
+**Risk Management**:
+- Max profit: Net premium received
+- Max loss: Wing width minus net premium
+- Break-even: Short put strike minus net premium
+
+<Tip>
+Place the short put at a support level or below where you'd be willing to own the stock.
+</Tip>
+
+### Iron Condor (Neutral)
+
+**Structure**:
+```
+SELL PUT $95 (lower short strike)
+BUY PUT $90 (lower long strike, protection)
+SELL CALL $105 (upper short strike)
+BUY CALL $110 (upper long strike, protection)
+```
+
+**Optimal Conditions**:
+- Neutral bias (expecting low movement)
+- High IV that you expect to contract
+- Clear support and resistance levels
+- Post-earnings or after a big move
+
+**Risk Management**:
+- Max profit: Net premium from both spreads
+- Max loss: Wider wing width minus net premium
+- Two break-evens: Short put minus premium, short call plus premium
+
+<Warning>
+The optimizer constructs symmetrical iron condors with equal wing widths on both sides for balanced risk.
+</Warning>
+
+### Bear Call Spread (Bearish)
+
+**Structure**:
+```
+SELL CALL $105 (lower strike, closer to current price)
+BUY CALL $110 (higher strike, protection)
+```
+
+**Optimal Conditions**:
+- Bearish bias on the underlying
+- Resistance level near the short call strike
+- High IV (you benefit from selling expensive premium)
+
+**Risk Management**:
+- Max profit: Net premium received
+- Max loss: Wing width minus net premium
+- Break-even: Short call strike plus net premium
+
+### Short Strangle (Neutral, Aggressive)
+
+**Structure**:
+```
+SELL PUT $95
+SELL CALL $105
+(No long legs - undefined risk!)
+```
+
+**Optimal Conditions**:
+- Strong neutral bias (very confident in range)
+- Aggressive risk profile selected
+- High IV expecting contraction
+- Large account with proper risk management
+
+<Warning>
+Short strangles have unlimited risk. The optimizer only suggests these for AGGRESSIVE risk profiles. Consider iron condors instead for defined risk.
+</Warning>
+
+## Real-World Examples
+
+### Example 1: Bullish on AAPL
+
+**Setup**:
+- Ticker: AAPL at $180
+- Bias: Bullish
+- Risk Profile: Balanced
+
+**Optimizer Output**:
+```
+Bull Put Spread
+├─ SELL PUT $175 @ $3.20
+└─ BUY PUT $165 @ $1.10
+
+Net Premium: $210
+Max Loss: $790
+ROC: 26.6%
+```
+
+**Analysis**: 
+- Short put at $175 gives 2.8% downside cushion
+- Collecting $210 on $790 capital at risk
+- Need AAPL to stay above $175 (high probability)
+
+### Example 2: Neutral on SPY Post-Rally
+
+**Setup**:
+- Ticker: SPY at $500
+- Bias: Neutral
+- Risk Profile: Conservative
+
+**Optimizer Output**:
+```
+Iron Condor
+├─ SELL PUT $485 @ $2.10
+├─ BUY PUT $480 @ $1.20
+├─ SELL CALL $515 @ $2.30
+└─ BUY CALL $520 @ $1.40
+
+Net Premium: $180
+Max Loss: $320
+ROC: 56.3%
+```
+
+**Analysis**:
+- Profit zone: $485-$515 ($30 wide)
+- Conservative deltas (0.15) give ~85% POP
+- Excellent ROC of 56% for 30-day trade
+
+### Example 3: Bearish on TSLA
+
+**Setup**:
+- Ticker: TSLA at $220
+- Bias: Bearish
+- Risk Profile: Aggressive
+
+**Optimizer Output**:
+```
+Bear Call Spread
+├─ SELL CALL $230 @ $6.50
+└─ BUY CALL $245 @ $3.20
+
+Net Premium: $330
+Max Loss: $1,170
+ROC: 28.2%
+```
+
+**Analysis**:
+- Short call at $230 (resistance level)
+- Wide $15 wings for aggressive profile
+- Need TSLA to stay below $230 (moderate probability)
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Compare Multiple Results" icon="ranking-star">
+    Don't just pick the highest ROC. Verify the strikes align with support/resistance levels
+  </Card>
+  <Card title="Check the Greeks" icon="chart-line">
+    After loading to simulator, review Greeks in the AI Insights panel
+  </Card>
+  <Card title="Consider Liquidity" icon="droplet">
+    The optimizer doesn't filter by volume/OI. Check the Builder for liquidity
+  </Card>
+  <Card title="Plan Your Exit" icon="door-open">
+    Most Theta Gang traders close at 50% of max profit rather than holding to expiration
+  </Card>
+</CardGroup>
+
+## Advanced Tips
+
+### Adjusting for Earnings
+
+**Before earnings**: IV is elevated
+- Optimizer will find higher premium strategies
+- Consider neutral strategies (iron condors) to benefit from post-earnings IV crush
+- Use aggressive profiles if you expect limited movement
+
+**After earnings**: IV has contracted
+- Lower premiums available
+- Better for directional plays (bull/bear spreads)
+- Conservative profiles work well
+
+### Comparing Conservative vs. Aggressive
+
+**Conservative (0.15 delta)**:
+- ✅ Higher win rate (~85%)
+- ✅ Less stressful
+- ❌ Lower ROC (20-30%)
+- ❌ Requires more capital for same dollar return
+
+**Aggressive (0.30 delta)**:
+- ✅ Higher ROC (40-60%)
+- ✅ Better capital efficiency
+- ❌ Lower win rate (~70%)
+- ❌ More position management required
+
+<Tip>
+Many experienced traders use conservative profiles for their core portfolio and aggressive profiles for a small "high-octane" allocation.
+</Tip>
+
+### When Optimizer Returns No Results
+
+**Possible causes**:
+1. **Illiquid option chain**: Not enough strikes with valid deltas
+2. **Extreme market conditions**: Strikes don't align with your risk profile
+3. **Post-expiration**: Try a different expiration date
+
+**Solutions**:
+- Switch to a different expiration (more liquid)
+- Try a different risk profile (balanced is usually most reliable)
+- Check if the ticker has weekly options available
+
+## Integration with Other Features
+
+### Workflow: Optimizer → Simulator → AI Analysis
+
+<Steps>
+  <Step title="Generate Recommendations">
+    Use the Optimizer to find high-ROC strategies
+  </Step>
+  
+  <Step title="Load to Simulator">
+    Click "Llevar a Simulator" to load all legs instantly
+  </Step>
+  
+  <Step title="Visualize Payoff">
+    Review the P&L chart in the Heatmap Simulator
+  </Step>
+  
+  <Step title="Check Greeks">
+    Switch to AI Insights to see your net Greeks and risk score
+  </Step>
+  
+  <Step title="Get AI Validation">
+    Request AI Strategic Analysis for a final sanity check
+  </Step>
+</Steps>
+
+### Combining with Market Sentiment
+
+Before running the optimizer:
+
+1. Check **Sentimiento** tab in AI Insights
+2. Review recent news and insider activity
+3. Set your directional bias based on sentiment + technicals
+4. Run optimizer with the bias that matches market conditions
+
+<Note>
+A bullish sentiment score (+0.15) combined with the optimizer's bullish strategies creates a high-conviction setup.
+</Note>
+
+## Troubleshooting
+
+### "No se encontraron estrategias viables"
+
+**Cause**: Optimizer couldn't construct any strategies meeting your criteria
+
+**Solutions**:
+- Try a different expiration date (look for monthly expirations)
+- Switch from aggressive to balanced profile
+- Verify the ticker has liquid options (check volume in the Builder)
+
+### Strategies Show Unlimited Max Loss
+
+**Cause**: You're seeing a Short Strangle (only appears for aggressive neutral)
+
+**Solution**: This is expected. Short strangles have undefined risk. Consider the iron condor alternative instead.
+
+### Loaded Strategy Looks Different in Simulator
+
+**Cause**: Prices may have changed between optimization and loading
+
+**Solution**: This is normal. The optimizer uses mid prices at search time. Refresh the option chain if prices are stale.
+
+---
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Backtest Your Strategy" href="/features/heatmap-simulator" icon="chart-area">
+    Simulate different scenarios with the Payoff Simulator
+  </Card>
+  <Card title="Monitor Market Context" href="/features/market-sentiment" icon="newspaper">
+    Track sentiment and fundamentals for your ticker
+  </Card>
+</CardGroup>

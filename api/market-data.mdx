@@ -1,0 +1,339 @@
+---
+title: 'Market Data'
+description: 'Comprehensive market context, sentiment, and insider information'
+icon: 'chart-line'
+---
+
+## Overview
+
+The Market Data endpoint provides a holistic view of a stock by combining:
+- Current price and fundamentals
+- News sentiment analysis (FinViz + VADER)
+- Analyst ratings and price targets
+- Insider trading activity (YahooQuery)
+- Key financial metrics
+
+---
+
+## Get Market Context
+
+<RequestExample>
+```bash cURL
+curl http://localhost:8000/api/market-context/AAPL
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    "http://localhost:8000/api/market-context/AAPL"
+)
+context = response.json()
+
+print(f"Price: ${context['current_price']}")
+print(f"Sentiment: {context['sentiment_status']}")
+print(f"Target: ${context['target_mean']}")
+print(f"Insider Buys: {context['insider_purchases']}")
+```
+</RequestExample>
+
+<ParamField path="symbol" type="string" required>
+  Stock ticker symbol (e.g., "AAPL", "TSLA", "SPY")
+</ParamField>
+
+### Response
+
+<ResponseField name="symbol" type="string">
+  Ticker symbol in uppercase
+</ResponseField>
+
+<ResponseField name="current_price" type="float">
+  Current stock price (from currentPrice, regularMarketPrice, or previousClose)
+</ResponseField>
+
+### Sentiment Analysis
+
+<ResponseField name="sentiment_score" type="float">
+  Sentiment score from -1.0 (very negative) to +1.0 (very positive)
+  - **-1.0 to -0.05**: Negative
+  - **-0.05 to +0.05**: Neutral
+  - **+0.05 to +1.0**: Positive
+</ResponseField>
+
+<ResponseField name="sentiment_status" type="string">
+  Human-readable sentiment: `"positive"`, `"neutral"`, `"negative"`, or `"unknown"`
+</ResponseField>
+
+<ResponseField name="recent_news" type="array">
+  Array of recent news headlines (strings) used for sentiment analysis
+</ResponseField>
+
+### Analyst Data
+
+<ResponseField name="target_mean" type="float | null">
+  Mean analyst price target
+</ResponseField>
+
+<ResponseField name="target_median" type="float | null">
+  Median analyst price target
+</ResponseField>
+
+<ResponseField name="recommendation_key" type="string | null">
+  Analyst recommendation consensus:
+  - `"strong_buy"`, `"buy"`, `"hold"`, `"sell"`, `"strong_sell"`
+</ResponseField>
+
+### Company Information
+
+<ResponseField name="long_business_summary" type="string | null">
+  Brief business description (truncated to ~300 characters)
+</ResponseField>
+
+### Financial Metrics
+
+<ResponseField name="forward_pe" type="float | null">
+  Forward price-to-earnings ratio
+</ResponseField>
+
+<ResponseField name="trailing_pe" type="float | null">
+  Trailing price-to-earnings ratio
+</ResponseField>
+
+<ResponseField name="debt_to_equity" type="float | null">
+  Debt-to-equity ratio
+</ResponseField>
+
+### Insider Trading
+
+<ResponseField name="insider_purchases" type="integer">
+  Number of recent insider purchase transactions
+</ResponseField>
+
+<ResponseField name="insider_sales" type="integer">
+  Number of recent insider sale transactions
+</ResponseField>
+
+<ResponseField name="top_insiders" type="array">
+  Array of recent insider transactions (up to 3)
+  
+  <Expandable title="Insider object">
+    <ResponseField name="name" type="string">
+      Name of the insider
+    </ResponseField>
+    
+    <ResponseField name="position" type="string">
+      Insider's position/relation (e.g., "CEO", "Director", "10% Owner")
+    </ResponseField>
+    
+    <ResponseField name="shares_traded" type="integer">
+      Number of shares traded:
+      - **Positive**: Purchase
+      - **Negative**: Sale
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "symbol": "AAPL",
+  "current_price": 175.43,
+  "sentiment_score": 0.34,
+  "sentiment_status": "positive",
+  "recent_news": [
+    "Apple unveils new AI features in latest software update",
+    "iPhone sales exceed analyst expectations in Q4",
+    "Apple stock hits new all-time high on strong earnings"
+  ],
+  "target_mean": 195.50,
+  "target_median": 192.00,
+  "recommendation_key": "buy",
+  "long_business_summary": "Apple Inc. designs, manufactures, and markets smartphones, personal computers, tablets, wearables, and accessories worldwide. The company offers iPhone, Mac, iPad, and Wearables, Home and Accessories. Apple also sells various related services...",
+  "forward_pe": 28.5,
+  "trailing_pe": 31.2,
+  "debt_to_equity": 145.3,
+  "insider_purchases": 3,
+  "insider_sales": 12,
+  "top_insiders": [
+    {
+      "name": "Tim Cook",
+      "position": "CEO",
+      "shares_traded": -50000
+    },
+    {
+      "name": "Luca Maestri",
+      "position": "CFO",
+      "shares_traded": -15000
+    },
+    {
+      "name": "Arthur D. Levinson",
+      "position": "Director",
+      "shares_traded": 5000
+    }
+  ]
+}
+```
+
+## Sentiment Calculation
+
+<Info>
+Sentiment analysis uses:
+1. **FinViz** to scrape recent news headlines
+2. **VADER** (Valence Aware Dictionary for Sentiment Reasoning) to score each headline
+3. Aggregates scores into a composite sentiment from -1.0 to +1.0
+</Info>
+
+## Insider Trading Interpretation
+
+<Accordion title="Understanding Insider Activity">
+- **High Purchases, Low Sales**: Bullish signal - insiders buying
+- **Low Purchases, High Sales**: Could be neutral (tax planning, diversification) or bearish
+- **Negative shares_traded**: Sale transaction
+- **Positive shares_traded**: Purchase transaction
+
+Note: Executive sales are often planned in advance and may not indicate bearish outlook.
+</Accordion>
+
+## Error Responses
+
+<ResponseField name="404" type="error">
+  Unable to retrieve price data for symbol
+  ```json
+  {
+    "detail": "No se pudo obtener el precio de XYZ"
+  }
+  ```
+</ResponseField>
+
+<ResponseField name="500" type="error">
+  Internal error during data fetching
+  ```json
+  {
+    "detail": "Error message"
+  }
+  ```
+</ResponseField>
+
+## Data Sources
+
+<CardGroup cols={3}>
+  <Card title="Yahoo Finance" icon="chart-line">
+    Price, fundamentals, analyst targets
+  </Card>
+  <Card title="YahooQuery" icon="user-tie">
+    Insider transactions and holders
+  </Card>
+  <Card title="FinViz + VADER" icon="newspaper">
+    News scraping and sentiment scoring
+  </Card>
+</CardGroup>
+
+## Use Cases
+
+### Pre-Trade Research
+
+```python
+import requests
+
+# Get full context before building strategy
+context = requests.get(
+    "http://localhost:8000/api/market-context/AAPL"
+).json()
+
+# Check if conditions are favorable
+if context['sentiment_score'] > 0.2:
+    print("Positive sentiment - consider bullish strategies")
+    
+if context['insider_purchases'] > context['insider_sales']:
+    print("Insiders are buying - bullish signal")
+    
+if context['current_price'] < context['target_mean']:
+    print(f"Upside to analyst target: ${context['target_mean'] - context['current_price']:.2f}")
+```
+
+### Risk Assessment
+
+- **High debt_to_equity**: More volatile, riskier strategies
+- **Negative sentiment**: Avoid aggressive bullish plays
+- **Heavy insider selling**: Exercise caution
+- **High forward PE**: Growth stock, higher volatility expected
+
+### Strategy Selection
+
+<Tabs>
+  <Tab title="Bullish Signals">
+    - Positive sentiment (> 0.1)
+    - Price below analyst target
+    - Insider buying > selling
+    - Strong recommendation (buy/strong_buy)
+    
+    → Consider: Bull Put Spreads, Call Debit Spreads
+  </Tab>
+  
+  <Tab title="Neutral Signals">
+    - Neutral sentiment (-0.05 to 0.05)
+    - Price near analyst target
+    - Mixed insider activity
+    - Hold recommendation
+    
+    → Consider: Iron Condors, Short Strangles, Calendar Spreads
+  </Tab>
+  
+  <Tab title="Bearish Signals">
+    - Negative sentiment (< -0.1)
+    - Price above analyst target
+    - Heavy insider selling
+    - Sell recommendation
+    
+    → Consider: Bear Call Spreads, Put Debit Spreads, avoid bullish strategies
+  </Tab>
+</Tabs>
+
+## Implementation Notes
+
+<Warning>
+**Data Freshness**: Sentiment is based on recent headlines which may be delayed. Insider data is from most recent filings. Always verify critical information.
+</Warning>
+
+<Info>
+**Fallback Logic**: If insider transaction parsing fails, the endpoint falls back to basic YFinance insider counts. The endpoint prioritizes returning data over perfect accuracy.
+</Info>
+
+## Integration Example
+
+```python
+import requests
+
+def analyze_ticker(ticker: str):
+    """Complete analysis workflow"""
+    
+    # 1. Get market context
+    context = requests.get(
+        f"http://localhost:8000/api/market-context/{ticker}"
+    ).json()
+    
+    # 2. Determine bias from sentiment and analysts
+    if context['sentiment_score'] > 0.1 and context['recommendation_key'] in ['buy', 'strong_buy']:
+        bias = 'bullish'
+    elif context['sentiment_score'] < -0.1:
+        bias = 'bearish'
+    else:
+        bias = 'neutral'
+    
+    # 3. Get strategy recommendations
+    recommendations = requests.get(
+        f"http://localhost:8000/api/options/recommend/{ticker}",
+        params={'bias': bias, 'risk_profile': 'balanced'}
+    ).json()
+    
+    return {
+        'context': context,
+        'bias': bias,
+        'strategies': recommendations['recommendations']
+    }
+
+result = analyze_ticker('AAPL')
+print(f"Bias: {result['bias']}")
+print(f"Recommended: {result['strategies'][0]['strategy_name']}")
+```
